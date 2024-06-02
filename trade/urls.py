@@ -4,7 +4,7 @@ from . import  views
 
 
 urlpatterns = [    
-    path('placeorder/', views.buyOrder),
+    path('buyorder/', views.buyOrder),
     path('sellorder/', views.sellOrder)
 
 ]
