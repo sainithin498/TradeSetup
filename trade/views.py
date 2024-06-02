@@ -7,7 +7,7 @@ from rest_framework import parsers, renderers, serializers, status, viewsets
 
 # Create your views here.
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def buyOrder(request):
     eshwar_data = {
     "symbol":"NSE:YESBANK-EQ",
@@ -35,7 +35,7 @@ def buyOrder(request):
             
     return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
 
-
+@api_view(["GET", "POST"])
 def sellOrder(request):
     eshwar_data = {
     "symbol":"NSE:YESBANK-EQ",
