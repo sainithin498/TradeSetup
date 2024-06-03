@@ -25,16 +25,18 @@ def buyOrder(request):
     }
     
     eshwar_id = "ISORT89TOC-100"
-    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTczMjYwNTUsImV4cCI6MTcxNzM3NDY1NSwibmJmIjoxNzE3MzI2MDU1LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbVhGRG5WdGZ0bWRhMGpuSE94dlNMaVk0NmZfd2h6ZEJUZ19xcUV4VnFCSnIwU09odFVtTFpyV2VCSVh1QURxUWJnMnY5U0lxeThzVThjb3hrX1J1RVpiMHN6MC1BT1B0YjJnMlVyVXhRR3dsVU9zZz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiM2JhMGM3MTZhNGU4MzI3ZTdkNTcxYTZlMjY0OTc3NDM1MjYxNjEwOTdlYTEwNTRjODk0NzkzZDciLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.FQMypxAIr9NRptDHUVZF2eLBJwa4-ZhXwrxqx174zVY"
+    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTc0MzQ1ODksImV4cCI6MTcxNzQ2MTA0OSwibmJmIjoxNzE3NDM0NTg5LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbVhmamRlY2NUb1VQYlREd1pDa2tWZ1RBUkQ5QU5jN1d2WUxrak43bmpWN3ZLME52ZG53ZjVEQWQ4OHZxM0JVS3lkU2JZY1c1aTliZlIwbElLaFZaQk96SjlYWmE3cWF0SVBrVnNVZHM2ZGFsM0FXcz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.Ec_9VfMtgPAd5vvFRnOnrEKBAEskg7jwmRn9Madi1SI"
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         eshwar_response = eshwar.place_order(data=eshwar_data)
         print(eshwar_response)
+        return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
     except Exception as e:
-        print("Some error occured in Eshwar account:", e)
+        print("Some error occured in Eshwar account:", str(e))
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
             
             
-    return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
 
 @api_view(["GET", "POST"])
 def sellOrder(request):
@@ -53,14 +55,15 @@ def sellOrder(request):
     }
     
     eshwar_id = "ISORT89TOC-100"
-    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTczMjYwNTUsImV4cCI6MTcxNzM3NDY1NSwibmJmIjoxNzE3MzI2MDU1LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbVhGRG5WdGZ0bWRhMGpuSE94dlNMaVk0NmZfd2h6ZEJUZ19xcUV4VnFCSnIwU09odFVtTFpyV2VCSVh1QURxUWJnMnY5U0lxeThzVThjb3hrX1J1RVpiMHN6MC1BT1B0YjJnMlVyVXhRR3dsVU9zZz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiM2JhMGM3MTZhNGU4MzI3ZTdkNTcxYTZlMjY0OTc3NDM1MjYxNjEwOTdlYTEwNTRjODk0NzkzZDciLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.FQMypxAIr9NRptDHUVZF2eLBJwa4-ZhXwrxqx174zVY"
+    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTc0MzQ1ODksImV4cCI6MTcxNzQ2MTA0OSwibmJmIjoxNzE3NDM0NTg5LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbVhmamRlY2NUb1VQYlREd1pDa2tWZ1RBUkQ5QU5jN1d2WUxrak43bmpWN3ZLME52ZG53ZjVEQWQ4OHZxM0JVS3lkU2JZY1c1aTliZlIwbElLaFZaQk96SjlYWmE3cWF0SVBrVnNVZHM2ZGFsM0FXcz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.Ec_9VfMtgPAd5vvFRnOnrEKBAEskg7jwmRn9Madi1SI"
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         eshwar_response = eshwar.place_order(data=eshwar_data)
         print(eshwar_response)
+        return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
     except Exception as e:
-        print("Some error occured in Eshwar account:", e)
+        print("Some error occured in Eshwar account:", str(e))
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
             
             
-    return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
 
