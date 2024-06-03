@@ -9,6 +9,7 @@ from rest_framework import parsers, renderers, serializers, status, viewsets
 
 @api_view(["GET", "POST"])
 def buyOrder(request):
+    print(request.POST)
     eshwar_data = {
     "symbol":"NSE:YESBANK-EQ",
     "qty":1,
