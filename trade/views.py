@@ -4,14 +4,22 @@ import os
 from rest_framework.decorators import api_view
 from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
-
+import json
 # Create your views here.
+
+def roundnearest(val):
+    prcn = val%100
+    if prcn <= 50 :
+        res = val-prcn
+    else:
+        res = 100 + val-prcn
+    return res
+
 
 @api_view(["GET", "POST"])
 def buyOrder(request):
     print('body-----------------------', request.body)
-    print('method----------------------',request.method)
-    print('post------------------------',request.POST)
+    jsonData = json.dumps(request.body)
     eshwar_data = {
     "symbol":"NSE:YESBANK-EQ",
     "qty":1,
