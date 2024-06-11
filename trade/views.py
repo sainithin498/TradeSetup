@@ -6,6 +6,7 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
 import json
 import datetime
+from trade.models import *
 
 # Create your views here.
 
@@ -46,6 +47,13 @@ def getStrikePrice(spot, index, _type):
     return strike, qty
 
 
+def getToken():
+    trduser = TradeUser.objects.last()
+    fyer_token = trduser.fyer_token
+    fyer_key = trduser.fyer_key
+    return fyer_token, fyer_key
+
+
 @api_view(["GET", "POST"])
 def buyOrder(request):
     # import ipdb ; ipdb.set_trace()
@@ -55,7 +63,10 @@ def buyOrder(request):
     index = jsonData.get('index')
    
     strike, qty = getStrikePrice(spot, index, 'BUY')
-
+    quantity = jsonData.get('qty', None)
+   
+    if quantity:
+        qty = quantity
     eshwar_data = {
     "symbol":strike,
     "qty":qty,
@@ -70,20 +81,32 @@ def buyOrder(request):
     "orderTag":"tag1"
     }
     print(eshwar_data)
-    eshwar_id = "ISORT89TOC-100"
-    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTgxMTI1NzYsImV4cCI6MTcxODE1MjIzNiwibmJmIjoxNzE4MTEyNTc2LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWFGRkFPa1huQndhTm1GYkJPa2Z6VmU5LTlXaS00bWZnWXF3Z2lmOHhCa1RCNVdXamRMMTdsZWZWRnFRbWhaQklVU0JYQ21DSEttWWpoeU1uUW1DdVNBM3RXUVdNekh3VlRnQ0ltSVV0LWhrcHVyTT0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.tKCpN13w95dJe2t2MROTvcP1FKsDozBpSJc0bumIOmo"
+    _token, _key = getToken()
+    eshwar_id = _key
+    token = _token
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
-        print(response)
-        eshwar_response = eshwar.place_order(data=eshwar_data)
-        print(eshwar_response)
-        return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
+        if response['s'] == 'ok':
+            buytrigger = True
+        else:
+            buytrigger = False
+    except Exception as e:
+        buytrigger = False
+        print("Some error occured in Eshwar account:", str(e))
+
+    try:
+        if buytrigger:       
+            eshwar_response = eshwar.place_order(data=eshwar_data)
+            print(eshwar_response)
+            return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
+        else: 
+            return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
-            
+     
             
 
 @api_view(["GET", "POST"])
@@ -92,8 +115,11 @@ def sellOrder(request):
     jsonData = json.loads(request.body)
     spot = jsonData.get('price')
     index = jsonData.get('index')
+    quantity = jsonData.get('qty', None)
    
     strike, qty = getStrikePrice(spot, index, "SELL")
+    if quantity:
+        qty = quantity
     eshwar_data = {
     "symbol": strike,
     "qty":qty,
@@ -108,15 +134,27 @@ def sellOrder(request):
     "orderTag":"tag1"
     }
     
-    eshwar_id = "ISORT89TOC-100"
-    token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTgxMTI1NzYsImV4cCI6MTcxODE1MjIzNiwibmJmIjoxNzE4MTEyNTc2LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWFGRkFPa1huQndhTm1GYkJPa2Z6VmU5LTlXaS00bWZnWXF3Z2lmOHhCa1RCNVdXamRMMTdsZWZWRnFRbWhaQklVU0JYQ21DSEttWWpoeU1uUW1DdVNBM3RXUVdNekh3VlRnQ0ltSVV0LWhrcHVyTT0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.tKCpN13w95dJe2t2MROTvcP1FKsDozBpSJc0bumIOmo"
+    _token, _key = getToken()
+    eshwar_id = _key
+    token = _token
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
-        print(response)
-        eshwar_response = eshwar.place_order(data=eshwar_data)
-        print(eshwar_response)
-        return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
+        if response['s'] == 'ok':
+            buytrigger = True
+        else:
+            buytrigger = False
+    except Exception as e:
+        buytrigger = False
+        print("Some error occured in Eshwar account:", str(e))
+
+    try:
+        if buytrigger:
+            eshwar_response = eshwar.place_order(data=eshwar_data)
+            print(eshwar_response)
+            return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
+        else: 
+            return JsonResponse({'message':'Order Not places','success':True},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
