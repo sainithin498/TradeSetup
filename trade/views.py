@@ -74,6 +74,8 @@ def buyOrder(request):
     token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTgxMTI1NzYsImV4cCI6MTcxODE1MjIzNiwibmJmIjoxNzE4MTEyNTc2LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWFGRkFPa1huQndhTm1GYkJPa2Z6VmU5LTlXaS00bWZnWXF3Z2lmOHhCa1RCNVdXamRMMTdsZWZWRnFRbWhaQklVU0JYQ21DSEttWWpoeU1uUW1DdVNBM3RXUVdNekh3VlRnQ0ltSVV0LWhrcHVyTT0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.tKCpN13w95dJe2t2MROTvcP1FKsDozBpSJc0bumIOmo"
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
+        response = eshwar.exit_positions(data={})
+        print(response)
         eshwar_response = eshwar.place_order(data=eshwar_data)
         print(eshwar_response)
         return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
@@ -110,6 +112,8 @@ def sellOrder(request):
     token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTgxMTI1NzYsImV4cCI6MTcxODE1MjIzNiwibmJmIjoxNzE4MTEyNTc2LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWFGRkFPa1huQndhTm1GYkJPa2Z6VmU5LTlXaS00bWZnWXF3Z2lmOHhCa1RCNVdXamRMMTdsZWZWRnFRbWhaQklVU0JYQ21DSEttWWpoeU1uUW1DdVNBM3RXUVdNekh3VlRnQ0ltSVV0LWhrcHVyTT0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMmUxNmJmOGMzNzQ0MTE2OGZjNjQ1MWMyZWEyMjgzNGQxNWUzNTY3ZWM4YmE5MmNjM2RlYTAwMDkiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.tKCpN13w95dJe2t2MROTvcP1FKsDozBpSJc0bumIOmo"
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
+        response = eshwar.exit_positions(data={})
+        print(response)
         eshwar_response = eshwar.place_order(data=eshwar_data)
         print(eshwar_response)
         return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
