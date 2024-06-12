@@ -77,7 +77,7 @@ def buyOrder(request):
     "stopPrice":0,
     "validity":"DAY",
     "disclosedQty":0,
-    "offlineOrder":True,
+    "offlineOrder":False,
     "orderTag":"tag1"
     }
     print(eshwar_data)
@@ -130,7 +130,7 @@ def sellOrder(request):
     "stopPrice":0,
     "validity":"DAY",
     "disclosedQty":0,
-    "offlineOrder":True,
+    "offlineOrder":False,
     "orderTag":"tag1"
     }
     
