@@ -12,5 +12,5 @@ class TradeUser(models.Model):
     token_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return self.trader_name, self.mobile, self.is_active, self.balance
+        return f'{self.trader_name} {self.mobile} {self.is_active} {self.balance}' 
 
