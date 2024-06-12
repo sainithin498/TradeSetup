@@ -64,7 +64,7 @@ def buyOrder(request):
    
     strike, qty = getStrikePrice(spot, index, 'BUY')
     quantity = jsonData.get('qty', None)
-   
+    offlineOrder = jsonData.get('offlineOrder', None)
     if quantity:
         qty = quantity
     eshwar_data = {
@@ -77,7 +77,7 @@ def buyOrder(request):
     "stopPrice":0,
     "validity":"DAY",
     "disclosedQty":0,
-    "offlineOrder":False,
+    "offlineOrder":True if offlineOrder == "True" else False,
     "orderTag":"tag1"
     }
     print(eshwar_data)
@@ -116,6 +116,7 @@ def sellOrder(request):
     spot = jsonData.get('price')
     index = jsonData.get('index')
     quantity = jsonData.get('qty', None)
+    offlineOrder = jsonData.get('offlineOrder', None)
    
     strike, qty = getStrikePrice(spot, index, "SELL")
     if quantity:
@@ -130,7 +131,7 @@ def sellOrder(request):
     "stopPrice":0,
     "validity":"DAY",
     "disclosedQty":0,
-    "offlineOrder":False,
+    "offlineOrder":True if offlineOrder == "True" else False,
     "orderTag":"tag1"
     }
     
