@@ -1,6 +1,6 @@
 from django.shortcuts import render
-# from fyers_api import fyersModel
-from fyers_apiv3 import fyersModel
+from fyers_api import fyersModel
+# from fyers_apiv3 import fyersModel
 import os
 from rest_framework.decorators import api_view
 from django.http import FileResponse, HttpResponse, JsonResponse
