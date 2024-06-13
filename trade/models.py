@@ -12,5 +12,16 @@ class TradeUser(models.Model):
     token_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.trader_name} {self.mobile} {self.is_active} {self.balance}' 
+        return f'{self.trader_name}' 
+
+class tradeResponse(models.Model):
+    trade_user  = models.ForeignKey('TradeUser', related_name='trade_user', on_delete=models.CASCADE)
+    response = models.TextField()
+    requestpath = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # def __str__(self):
+    #     return f'{self.trade_user.trader_name} {self.response}'
+
+    
 

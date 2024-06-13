@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from fyers_api import fyersModel
+# from fyers_api import fyersModel
+from fyers_apiv3 import fyersModel
 import os
 from rest_framework.decorators import api_view
 from django.http import FileResponse, HttpResponse, JsonResponse
@@ -9,6 +10,14 @@ import datetime
 from trade.models import *
 
 # Create your views here.
+
+def savingResponse(tradeUser, response, requestpath):
+    data = {
+        'trade_user_id':tradeUser,
+        'response': response,
+        'requestpath': requestpath
+    }
+    tradeResponse.objects.create(**data)
 
 def roundnearest(val, _type):
     prcn = val%100
@@ -84,9 +93,12 @@ def buyOrder(request):
     _token, _key = getToken()
     eshwar_id = _key
     token = _token
+    tradeUser = TradeUser.objects.get(fyer_key = _key)
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
+        print(response)
+        savingResponse(tradeUser.id, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -99,6 +111,7 @@ def buyOrder(request):
         if buytrigger:       
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
+            savingResponse(tradeUser.id, eshwar_response, request.path)
             return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
@@ -138,9 +151,12 @@ def sellOrder(request):
     _token, _key = getToken()
     eshwar_id = _key
     token = _token
+    tradeUser = TradeUser.objects.get(fyer_key = _key)
+
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
+        savingResponse(tradeUser.id, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -153,12 +169,31 @@ def sellOrder(request):
         if buytrigger:
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
+            savingResponse(tradeUser.id, eshwar_response, request.path)
             return JsonResponse({'message':'Order sell successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not places','success':True},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
             
-            
+@api_view(["GET", "POST"])        
+def exitOrder(request):
+    _token, _key = getToken()
+    eshwar_id = _key
+    token = _token
+    tradeUser = TradeUser.objects.get(fyer_key = _key)
+    eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
+    try:
+        response = eshwar.exit_positions(data={})
+        print(response)
+        savingResponse(tradeUser.id, response, request.path)
+        return JsonResponse({'message':'Exit postitions successfully','success':True},status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        
+        print("Some error occured in Eshwar account:", str(e))
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
 
