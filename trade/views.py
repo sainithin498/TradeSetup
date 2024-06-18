@@ -202,15 +202,14 @@ def exitOrder(request):
 def buystockOrder(request):
     # import ipdb ; ipdb.set_trace()
     print('body-----------------------', request.body)
-    # jsonData = json.loads(request.body)
+    jsonData = json.loads(request.body)
     # price = jsonData.get('price', 0)
-    # symbol = jsonData.get('symbol')
+    symbol = jsonData.get('symbol')
     # prodType = jsonData.get('productType', None)
-    # quantity = jsonData.get('qty', None)
+    quantity = jsonData.get('qty', None)
     # offlineOrder = jsonData.get('offlineOrder', None)
     offlineOrder = "False"
-    symbol = "NSE:MCX-EQ"
-    quantity = 2
+    symbol = symbol
     prodType = "INTRADAY" 
     price = 0
     eshwar_data = {
