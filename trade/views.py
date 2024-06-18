@@ -237,7 +237,7 @@ def buystockOrder(request):
     try:
         response = eshwar.exit_positions(data={})
         print(response)
-        savingResponse(1, response, request.path)
+        savingResponse(41, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -250,7 +250,7 @@ def buystockOrder(request):
         if buytrigger:       
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
-            savingResponse(1, eshwar_response, request.path)
+            savingResponse(41, eshwar_response, request.path)
             return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
@@ -298,7 +298,7 @@ def sellstockOrder(request):
     try:
         response = eshwar.exit_positions(data={})
         print(response)
-        savingResponse(1, response, request.path)
+        savingResponse(41, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -311,7 +311,7 @@ def sellstockOrder(request):
         if buytrigger:       
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
-            savingResponse(1, eshwar_response, request.path)
+            savingResponse(41, eshwar_response, request.path)
             return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
