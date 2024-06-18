@@ -232,12 +232,12 @@ def buystockOrder(request):
     # _token, _key = getToken()
     eshwar_id = _key
     token = _token
-    tradeUser = TradeUser.objects.get(fyer_key = _key)
+    # tradeUser = TradeUser.objects.get(fyer_key = _key)
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
         print(response)
-        savingResponse(tradeUser.id, response, request.path)
+        savingResponse(1, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -250,7 +250,7 @@ def buystockOrder(request):
         if buytrigger:       
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
-            savingResponse(tradeUser.id, eshwar_response, request.path)
+            savingResponse(1, eshwar_response, request.path)
             return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
@@ -293,12 +293,12 @@ def sellstockOrder(request):
     # _token, _key = getToken()
     eshwar_id = _key
     token = _token
-    tradeUser = TradeUser.objects.get(fyer_key = _key)
+    # tradeUser = TradeUser.objects.get(fyer_key = _key)
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
         print(response)
-        savingResponse(tradeUser.id, response, request.path)
+        savingResponse(1, response, request.path)
         if response['s'] == 'ok':
             buytrigger = True
         else:
@@ -311,7 +311,7 @@ def sellstockOrder(request):
         if buytrigger:       
             eshwar_response = eshwar.place_order(data=eshwar_data)
             print(eshwar_response)
-            savingResponse(tradeUser.id, eshwar_response, request.path)
+            savingResponse(1, eshwar_response, request.path)
             return JsonResponse({'message':'Order placed successfully','success':True},status=status.HTTP_200_OK)
         else: 
             return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
