@@ -6,7 +6,12 @@ from .models import *
 
 class tradeUserAdmin(admin.ModelAdmin):
     model = TradeUser
-    list_display = ['trader_name', 'mobile', 'is_active', 'balance' ]
+    list_display = ['trader_name', 'mobile', 'is_active', 'balance', 'generateToken' ]
+
+    def generateToken(self, obj):
+        from django.utils.html import format_html
+        # url = '/admin/accounts/extend-user-role/'+str(obj.pk)+'/'+str(obj.phone)+"/"
+        return format_html("<a href={}>Generate Token</a>", None)
 
 
 class tradeResponseAdmin(admin.ModelAdmin):

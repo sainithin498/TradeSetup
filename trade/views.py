@@ -209,7 +209,6 @@ def buystockOrder(request):
     quantity = jsonData.get('qty', None)
     # offlineOrder = jsonData.get('offlineOrder', None)
     offlineOrder = "False"
-    symbol = symbol
     prodType = "INTRADAY" 
     price = 0
     eshwar_data = {
@@ -262,15 +261,13 @@ def buystockOrder(request):
 def sellstockOrder(request):
     # import ipdb ; ipdb.set_trace()
     print('body-----------------------', request.body)
-    # jsonData = json.loads(request.body)
+    jsonData = json.loads(request.body)
     # price = jsonData.get('price', 0)
-    # symbol = jsonData.get('symbol')
+    symbol = jsonData.get('symbol')
     # prodType = jsonData.get('productType', None)
-    # quantity = jsonData.get('qty', None)
+    quantity = jsonData.get('qty', None)
     # offlineOrder = jsonData.get('offlineOrder', None)
     offlineOrder = "False"
-    symbol = "NSE:MCX-EQ"
-    quantity = 2
     prodType = "INTRADAY" 
     price = 0
     eshwar_data = {
