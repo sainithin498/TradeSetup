@@ -55,12 +55,13 @@ def scrappingToken(broker):
         ser = Service(path)
         driver = webdriver.Chrome(service=ser)
     else:
+        ser = Service(CHROMEDRIVER_PATH)
 
         chrome_options = Options()
         # chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
         chrome_options.add_argument('--no-sandbox')
-        driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH,
+        driver = webdriver.Chrome(service=ser,
                                 chrome_options=chrome_options
                             )
     if broker == 'upstox':
