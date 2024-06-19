@@ -8,8 +8,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 # import sqlite3
-import webbrowser
+import os
 from fyers_apiv3 import fyersModel
+from selenium.webdriver.chrome.options import Options
+
+CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
+WINDOW_SIZE = "1920,1080"
+
 
 def fyersToken(auth_code):
 
@@ -45,13 +50,22 @@ def fyersToken(auth_code):
 #     cur.execute("CREATE TABLE Token(token)")
 
 def scrappingToken(broker):
-    path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
+    if os.name == 'nt':
+        path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
+        ser = Service(path)
+        driver = webdriver.Chrome(service=ser)
+    else:
 
-    ser = Service(path)
-
-    driver = webdriver.Chrome(service=ser)
+        chrome_options = Options()
+        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
+        chrome_options.add_argument('--no-sandbox')
+        driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH,
+                                chrome_options=chrome_options
+                            )
     if broker == 'upstox':
         loginUrl = UPSTOX_AUTHORISE
+        driver.get(loginUrl)
         driver.find_element(By.ID, "mobileNum").send_keys('8977810371')
         
         driver.find_element(By.ID, "getOtp").click()
@@ -101,16 +115,11 @@ def scrappingToken(broker):
     
         driver.get(loginUrl)
         driver.find_element(By.ID, "mobile-code").send_keys('8977810371')
-        # driver.find_element(By.ID, "mobile-code").send_keys('8977810371')
         
         driver.find_element(By.ID, "mobileNumberSubmit").click()
 
         time.sleep(2)
-        otpNumber = "687024"
-        
-        # for index, nm in enumerate(otpNumber):
-        #     ind = index +1
-        #     driver.find_element(By.XPATH, "//div[@id='otp-container']/input[{}]".format(ind)).send_keys(nm)
+       
         time.sleep(15)
 
         driver.find_element(By.ID, "confirmOtpSubmit").click()
@@ -129,70 +138,6 @@ def scrappingToken(broker):
         print(get_url)
         auth_code = get_url.split('&')[2].split('=')[1]
         fyersToken(auth_code)
-
-
-
-
-# def scrappingToken():
-    
-
-#     path = 'E:/Eswar/Trading/chromedriver.exe'
-
-#     ser = Service(path)
-
-#     driver = webdriver.Chrome(service=ser)
-    
-#     loginUrl = AUTHORISE
-#     # loginUrl = 'https://login.fyers.in/'
-#     driver.get(loginUrl)
-
-#     driver.find_element(By.ID, "mobileNum").send_keys('8977810371')
-#     # driver.find_element(By.ID, "mobile-code").send_keys('8977810371')
-#     time.sleep(1)
-#     driver.find_element(By.ID, "getOtp").click()
-
-
-#     # driver.find_element(By.ID, "mobileNumberSubmit").click()
-#     time.sleep(2)
-#     driver.find_element(By.ID, "otpNum").send_keys('412750') ## Enter
-#     time.sleep(1)
-
-#     driver.find_element(By.ID, "continueBtn").click()
-#     time.sleep(2)
-
-#     driver.find_element(By.ID, "pinCode").send_keys('170916')
-#     time.sleep(1)
-
-#     driver.find_element(By.ID, "pinContinueBtn").click()
-#     time.sleep(3)
-
-#     get_url = driver.current_url
-#     time.sleep(1)
-
-#     print("The current url is:"+str(get_url))
-#     CODE = get_url.split('=')[1]
-#     driver.quit()
-
-#     url = TOKEN
-#     data = {
-#         'code': CODE,
-#         'client_id': CREDS['API_KEY'],
-#         'client_secret': CREDS['API_SECRET'],
-#         'redirect_uri': CREDS['REDIRECT_URI'],
-#         'grant_type': 'authorization_code',
-#     }
-
-#     response = requests.post(url, headers=HEADERS, data=data)
-#     res = response.json()
-#     print(res)
-#     con = sqlite3.connect("trade.db")
-#     cur = con.cursor()
-#     cur.execute("""DELETE FROM Token""")
-#     con.commit()
-#     cur.execute("""
-#     INSERT INTO Token VALUES ('{}')""".format(res['access_token']))
-#     con.commit()
-#     con.close()
 
 
 # def logout():
