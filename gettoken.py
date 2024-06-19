@@ -67,10 +67,14 @@ def scrappingToken(broker, otpNum, trader_id):
         ser = Service(CHROMEDRIVER_PATH)
 
         chrome_options = Options()
+        # chrome_options.add_argument("no-sandbox")
+        # chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
+        preferences = {
+                    #"download.default_directory": download_dir ,
+                    "directory_upgrade": False,
+                    "safebrowsing.enabled": False }
+        chrome_options.add_experimental_option("prefs", preferences)
        
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':
