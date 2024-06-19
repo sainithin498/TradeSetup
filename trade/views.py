@@ -116,9 +116,11 @@ def buyOrder(request):
         print(response)
         savingResponse(tradeUser.id, response, request.path)
         sub = 'Exit request has been'
+        buytrigger = True
         if response['s'] == 'ok' and sub in response['message']: 
             response = eshwar.exit_positions(data={})
             time.sleep(2)
+            buytrigger = True
 
         elif response['s'] == 'ok':
             buytrigger = True
@@ -179,9 +181,11 @@ def sellOrder(request):
         response = eshwar.exit_positions(data={})
         savingResponse(tradeUser.id, response, request.path)
         sub = 'Exit request has been'
+        buytrigger = True
         if response['s'] == 'ok' and sub in response['message']: 
             response = eshwar.exit_positions(data={})
             time.sleep(2)
+            buytrigger = True
 
         elif response['s'] == 'ok':
             buytrigger = True
