@@ -39,7 +39,6 @@ INSTRUMENTs = 'https://assets.upstox.com/market-quote/instruments/exchange/compl
 
 BASE_URL = "https://api.upstox.com/v2"
 UPSTOX_AUTHORISE = "https://api.upstox.com/v2/login/authorization/dialog?response_type=code&client_id=6b7566ef-63c0-47fb-a501-a5fd8c190ff9&redirect_uri=https://google.com/"
-FYERS_AUTHORISE = 'https://api.fyers.in/api/v2/generate-authcode?client_id=ISORT89TOC-100&redirect_uri=https%3A%2F%2Fmyapi.fyers.in%2F&response_type=code&state=None'
 TOKEN = BASE_URL + "/login/authorization/token"
 LOGOUT = BASE_URL + '/logout'
 PROFILE = BASE_URL + '/user/profile'

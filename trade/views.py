@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from fyers_api import fyersModel
-# from fyers_apiv3 import fyersModel
+from fyers_apiv3 import fyersModel
 import os
 from rest_framework.decorators import api_view
 from django.http import FileResponse, HttpResponse, JsonResponse
@@ -8,6 +8,8 @@ from rest_framework import parsers, renderers, serializers, status, viewsets
 import json
 import datetime
 from trade.models import *
+from gettoken import scrappingToken
+import time
 
 # Create your views here.
 
@@ -57,15 +59,29 @@ def getStrikePrice(spot, index, _type):
 
 
 def getToken():
-    trduser = TradeUser.objects.last()
+    trduser = TradeUser.objects.filter(is_active=True).last()
     fyer_token = trduser.fyer_token
     fyer_key = trduser.fyer_key
     return fyer_token, fyer_key
 
 
+def getTokenRequest(request, pk):
+    trader = TradeUser.objects.get(id=pk)
+    print(trader)
+    if request.method == 'POST':
+        otp = request.POST.get('otp_pin')
+        access_token = scrappingToken('fyers', otp, pk)
+        print(access_token)
+        trader.fyer_token = access_token
+        trader.token_date = datetime.datetime.now().date()
+        trader.save()
+        return redirect('/admin/trade/tradeuser/')
+    return render(request,'trade/tokengenerate.html',{
+        'trader_name': trader.trader_name
+    })
+
 @api_view(["GET", "POST"])
 def buyOrder(request):
-    # import ipdb ; ipdb.set_trace()
     print('body-----------------------', request.body)
     jsonData = json.loads(request.body)
     spot = jsonData.get('price')
@@ -99,7 +115,12 @@ def buyOrder(request):
         response = eshwar.exit_positions(data={})
         print(response)
         savingResponse(tradeUser.id, response, request.path)
-        if response['s'] == 'ok':
+        sub = 'Exit request has been'
+        if response['s'] == 'ok' and sub in response['message']: 
+            response = eshwar.exit_positions(data={})
+            time.sleep(2)
+
+        elif response['s'] == 'ok':
             buytrigger = True
         else:
             buytrigger = False
@@ -157,7 +178,12 @@ def sellOrder(request):
     try:
         response = eshwar.exit_positions(data={})
         savingResponse(tradeUser.id, response, request.path)
-        if response['s'] == 'ok':
+        sub = 'Exit request has been'
+        if response['s'] == 'ok' and sub in response['message']: 
+            response = eshwar.exit_positions(data={})
+            time.sleep(2)
+
+        elif response['s'] == 'ok':
             buytrigger = True
         else:
             buytrigger = False

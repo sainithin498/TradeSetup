@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -56,7 +56,7 @@ ROOT_URLCONF = 'TradeSetup.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,12 +87,12 @@ DATABASES = {
         'NAME': 'trade',
         'USER': 'postgres',
         'PASSWORD': 'Trade@123',
-        'HOST': 'localhost',
+        'HOST': '65.0.99.151',
         'PORT': '5432',
     }
 }
 
-# Password validation
+# # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [

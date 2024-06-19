@@ -2,16 +2,16 @@ from django.apps import apps
 from django.contrib import admin
 from django.contrib.admin.sites import AlreadyRegistered
 from .models import *
+from django.utils.html import format_html
 
 
 class tradeUserAdmin(admin.ModelAdmin):
     model = TradeUser
-    list_display = ['trader_name', 'mobile', 'is_active', 'balance', 'generateToken' ]
+    list_display = ['trader_name', 'mobile', 'is_active', 'balance', 'generateToken', 'token_date' ]
 
     def generateToken(self, obj):
-        from django.utils.html import format_html
-        # url = '/admin/accounts/extend-user-role/'+str(obj.pk)+'/'+str(obj.phone)+"/"
-        return format_html("<a href={}>Generate Token</a>", None)
+        url = '/admin/trade/'+ str(obj.id) +'/token/'
+        return format_html("<a href={}>Generate Token</a>", url)
 
 
 class tradeResponseAdmin(admin.ModelAdmin):

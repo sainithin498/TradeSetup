@@ -10,20 +10,22 @@ from selenium.webdriver.common.by import By
 # import sqlite3
 import os
 from fyers_api import fyersModel
+from fyers_apiv3 import fyersModel
+from trade.models import TradeUser
 from selenium.webdriver.chrome.options import Options
 
 CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
 WINDOW_SIZE = "1920,1080"
 
 
-def fyersToken(auth_code):
+def fyersToken(auth_code, redirect_uri, client_id, secret_key):
 
-    redirect_uri= "https://myapi.fyers.in/"  ## redircet_uri you entered while creating APP.
-    client_id = "ISORT89TOC-100"                       ## Client_id here refers to APP_ID of the created app
-    secret_key = "OMDV0GX733"                          ## app_secret key which you got after creating the app 
+    redirect_uri= redirect_uri  ## redircet_uri you entered while creating APP.
+    client_id = client_id                      ## Client_id here refers to APP_ID of the created app
+    secret_key = secret_key                         ## app_secret key which you got after creating the app 
     grant_type = "authorization_code"                  ## The grant_type always has to be "authorization_code"
     response_type = "code"                             ## The response_type always has to be "code"
-    state = "sample"    
+    
 
     # Create a session object to handle the Fyers API authentication and token generation
     session = fyersModel.SessionModel(
@@ -41,7 +43,7 @@ def fyersToken(auth_code):
     response = session.generate_token()
 
     # Print the response, which should contain the access token and other details
-    print(response['access_token'])
+    return response['access_token']
 
 # def dbconn():
 #     con = sqlite3.connect("trade.db")
@@ -49,7 +51,14 @@ def fyersToken(auth_code):
 #     cur.execute("CREATE TABLE tradeorders(option, orderId)")
 #     cur.execute("CREATE TABLE Token(token)")
 
-def scrappingToken(broker):
+def scrappingToken(broker, otpNum, trader_id):
+    trader = TradeUser.objects.get(id=trader_id)
+    mobile = trader.mobile
+    pinNumber = trader.pin
+    client_id = trader.fyer_key
+    redirect_uri = trader.redirect_uri
+    secret_key = trader.secret_key
+    print(trader)
     if os.name == 'nt':
         path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
         ser = Service(path)
@@ -58,26 +67,26 @@ def scrappingToken(broker):
         ser = Service(CHROMEDRIVER_PATH)
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         chrome_options.add_argument("--window-size=%s" % WINDOW_SIZE)
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_argument('--disable-dev-shm-usage')
        
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':
         loginUrl = UPSTOX_AUTHORISE
         driver.get(loginUrl)
-        driver.find_element(By.ID, "mobileNum").send_keys('8977810371')
+        driver.find_element(By.ID, "mobileNum").send_keys(mobile)
         
         driver.find_element(By.ID, "getOtp").click()
         time.sleep(2)
 
-        driver.find_element(By.ID, "otpNum").send_keys('412750') ## Enter
+        driver.find_element(By.ID, "otpNum").send_keys(otpNum) ## Enter
 
         driver.find_element(By.ID, "continueBtn").click()
         time.sleep(2)
 
-        driver.find_element(By.ID, "pinCode").send_keys('170916')
+        driver.find_element(By.ID, "pinCode").send_keys(pin)
 
         driver.find_element(By.ID, "pinContinueBtn").click()
         time.sleep(3)
@@ -100,36 +109,37 @@ def scrappingToken(broker):
 
         response = requests.post(url, headers=HEADERS, data=data)
         res = response.json()
-        print(res)
-
         
-        con = sqlite3.connect("trade.db")
-        cur = con.cursor()
-        cur.execute("""DELETE FROM Token""")
-        con.commit()
-        cur.execute("""
-        INSERT INTO Token VALUES ('{}')""".format(res['access_token']))
-        con.commit()
-        con.close()
+        token = res['access_token']
+
+    
     else:
+        FYERS_AUTHORISE = "https://api.fyers.in/api/v2/generate-authcode?client_id="+ client_id + "&redirect_uri=" +redirect_uri + "&response_type=code&state=None"
         loginUrl = FYERS_AUTHORISE 
     
         driver.get(loginUrl)
-        driver.find_element(By.ID, "mobile-code").send_keys('8977810371')
-        
+        driver.find_element(By.ID, "mobile-code").send_keys(mobile)
+        time.sleep(2)
         driver.find_element(By.ID, "mobileNumberSubmit").click()
 
         time.sleep(2)
-       
-        time.sleep(15)
+
+        if otpNum != '1':
+            for index, nm in enumerate(otpNum):
+                ind = index +1
+                driver.find_element(By.XPATH, "//div[@id='otp-container']/input[{}]".format(ind)).send_keys(nm)
+        
+            time.sleep(2)
+        else:
+            time.sleep(15)
+
 
         driver.find_element(By.ID, "confirmOtpSubmit").click()
         time.sleep(2)
-        pinNumber = "1607"
         for index, pin in enumerate(pinNumber):
             ind = index +1
             driver.find_element(By.XPATH, "//div[@id='pin-container']/input[{}]".format(ind)).send_keys(pin)
-    
+        time.sleep(1)
         driver.find_element(By.ID, "verifyPinSubmit").click()
         time.sleep(3)
 
@@ -138,7 +148,9 @@ def scrappingToken(broker):
 
         print(get_url)
         auth_code = get_url.split('&')[2].split('=')[1]
-        fyersToken(auth_code)
+        token = fyersToken(auth_code, redirect_uri, client_id, secret_key )
+
+    return token
 
 
 # def logout():
@@ -146,8 +158,8 @@ def scrappingToken(broker):
 #     response = requests.delete(url, headers=getdBToken())
 #     print(response.json())
     
-if __name__ == '__main__':
-    # execute only if run as the entry point into the program
-    scrappingToken('fyers')
+# if __name__ == '__main__':
+#     # execute only if run as the entry point into the program
+#     scrappingToken('fyers')
     # logout()
    
