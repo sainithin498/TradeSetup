@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 # import sqlite3
 import os
-from fyers_apiv3 import fyersModel
+from fyers_apiv import fyersModel
 from selenium.webdriver.chrome.options import Options
 
 CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
