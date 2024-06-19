@@ -7,9 +7,12 @@ class TradeUser(models.Model):
     fyer_key = models.CharField(max_length=50, unique=True)
     updated_at = models.DateTimeField(auto_now=True)
     mobile = models.CharField(unique=True)
+    pin = models.CharField(max_length=10, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     balance = models.IntegerField(default=0)
     token_date = models.DateField(blank=True, null=True)
+    redirect_uri = models.CharField(max_length=100, blank=True, null=True)
+    secret_key = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return f'{self.trader_name}' 
