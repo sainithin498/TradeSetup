@@ -54,7 +54,8 @@ def getStrikePrice(spot, index, _type):
         qty = 15
     year, month, date = dategeneration(weekday)
     value, code = roundnearest(int(spot), _type)
-    strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
+    # strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
+    strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
     return strike, qty
 
 
