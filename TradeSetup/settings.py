@@ -124,7 +124,7 @@ USE_TZ = True
 
 # Celery settings
 # Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://localhost:6379'
 
 
 # Static files (CSS, JavaScript, Images)
