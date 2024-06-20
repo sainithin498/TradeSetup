@@ -67,6 +67,7 @@ def getToken(mobile):
         trduser = TradeUser.objects.filter(is_active=True).last()
     fyer_token = trduser.fyer_token
     fyer_key = trduser.fyer_key
+    print(fyer_token, fyer_key)
     return fyer_token, fyer_key
 
 
@@ -122,14 +123,14 @@ def buyOrder(request):
         response = eshwar.exit_positions(data={})
         print(response)
         savingResponse(tradeUser.id, response, request.path)
-        sub = 'Exit request has been'
+        
         buytrigger = True
-        if response['s'] == 'ok' and sub in response['message']: 
+        if response['s'] == 'ok' and 'Exit request has been' in response['message']: 
             response = eshwar.exit_positions(data={})
             time.sleep(2)
             buytrigger = True
 
-        elif response['s'] == 'ok':
+        elif response['s'] == 'ok' or 'no open positions' in response['message']:
             buytrigger = True
         else:
             buytrigger = False
@@ -196,7 +197,7 @@ def sellOrder(request):
             time.sleep(2)
             buytrigger = True
 
-        elif response['s'] == 'ok':
+        elif response['s'] == 'ok' or 'no open positions' in response['message']:
             buytrigger = True
         else:
             buytrigger = False
@@ -219,7 +220,8 @@ def sellOrder(request):
             
 @api_view(["GET", "POST"])        
 def exitOrder(request):
-    _token, _key = getToken()
+    mobile = None
+    _token, _key = getToken(mobile)
     eshwar_id = _key
     token = _token
     tradeUser = TradeUser.objects.get(fyer_key = _key)
@@ -242,14 +244,14 @@ def buystockOrder(request):
     # import ipdb ; ipdb.set_trace()
     print('body-----------------------', request.body)
     jsonData = json.loads(request.body)
-    # price = jsonData.get('price', 0)
+    price = jsonData.get('price', 0)
     symbol = jsonData.get('symbol')
-    # prodType = jsonData.get('productType', None)
+    prodType = jsonData.get('productType', None)
     quantity = jsonData.get('qty', None)
-    # offlineOrder = jsonData.get('offlineOrder', None)
-    offlineOrder = "False"
-    prodType = "INTRADAY" 
-    price = 0
+    offlineOrder = jsonData.get('offlineOrder', None)
+    # offlineOrder = "False"
+    # prodType = "INTRADAY" 
+    # price = 0
     eshwar_data = {
     "symbol":symbol,
     "qty":quantity,
@@ -264,8 +266,8 @@ def buystockOrder(request):
     "orderTag":"tag1"
     }
     print(eshwar_data)
-    _token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTg3Nzc4NjIsImV4cCI6MTcxODg0MzQ0MiwibmJmIjoxNzE4Nzc3ODYyLCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWNuZ0dZNXkwNEFkTFVwdDVFRmhwNU4xNjlxSTV6YVpJRlVqVzRaY2FTLUZiLWlOckRUZWplV1FxMW1KYTdoR2JEWGxEWUs5NjU0SXlhNDgyMjhRLUswOUFwT2RXa2s2STMtSmRuRktIdDdUZ2hZYz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiOTA2MjNiYjkzODNjZTNiNWJjNTA4YzQzODQwNTFmZmVmNzZiNjhhZWQwNDgyOWM3YmFlMTBkY2IiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.abnLtLobM47Ziv3wEfwsfZiD2JrRQ76Biqh3J0yv2-A"
-    _key = "ISORT89TOC-100"
+    _token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTg4NTg0NjQsImV4cCI6MTcxODkyOTgwNCwibmJmIjoxNzE4ODU4NDY0LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWM3TGdvZVY4b2t1TkZ2cnVUaGs5aTlqTFEtZlEyMXVVSVoxQ1F1UmdsUnp6eWZxTUFwNXZwdjNDQTZhTU5faHFJeEY0dFlfMTgzQ3JmNGxrT2V1LWQ1Sm5xNmJxdmRXS01qdEt4ZTJ3WXFaUU4xdz0iLCJkaXNwbGF5X25hbWUiOiJSQU1BTkFESEEgS0FOQUtBIERVUkdBIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMDg4MjAzM2I0ZGU1NjY3MmUzYmU4YWZiODYzMzRhZTI1MWU5NTFkNDczMDRhYmU0OTllMjk4NmQiLCJmeV9pZCI6IllSMTAwNzIiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.zK-yCnPp8HC_kK0Ls832sLB_-P7p4Q0nswCqXNtVBSc"
+    _key = "T6RUCIRR09-100"
     # _token, _key = getToken()
     eshwar_id = _key
     token = _token
@@ -301,14 +303,14 @@ def sellstockOrder(request):
     # import ipdb ; ipdb.set_trace()
     print('body-----------------------', request.body)
     jsonData = json.loads(request.body)
-    # price = jsonData.get('price', 0)
+    price = jsonData.get('price', 0)
     symbol = jsonData.get('symbol')
-    # prodType = jsonData.get('productType', None)
+    prodType = jsonData.get('productType', None)
     quantity = jsonData.get('qty', None)
-    # offlineOrder = jsonData.get('offlineOrder', None)
-    offlineOrder = "False"
-    prodType = "INTRADAY" 
-    price = 0
+    offlineOrder = jsonData.get('offlineOrder', None)
+    # offlineOrder = "False"
+    # prodType = "INTRADAY" 
+    # price = 0
     eshwar_data = {
     "symbol":symbol,
     "qty":quantity,
@@ -324,8 +326,8 @@ def sellstockOrder(request):
     }
 
     print(eshwar_data)
-    _token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTg3Nzc4NjIsImV4cCI6MTcxODg0MzQ0MiwibmJmIjoxNzE4Nzc3ODYyLCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWNuZ0dZNXkwNEFkTFVwdDVFRmhwNU4xNjlxSTV6YVpJRlVqVzRaY2FTLUZiLWlOckRUZWplV1FxMW1KYTdoR2JEWGxEWUs5NjU0SXlhNDgyMjhRLUswOUFwT2RXa2s2STMtSmRuRktIdDdUZ2hZYz0iLCJkaXNwbGF5X25hbWUiOiJNQVZVUlUgRVNXQVIgUkFPIiwib21zIjoiSzEiLCJoc21fa2V5IjoiOTA2MjNiYjkzODNjZTNiNWJjNTA4YzQzODQwNTFmZmVmNzZiNjhhZWQwNDgyOWM3YmFlMTBkY2IiLCJmeV9pZCI6IlhNMTgyNDYiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.abnLtLobM47Ziv3wEfwsfZiD2JrRQ76Biqh3J0yv2-A"
-    _key = "ISORT89TOC-100"
+    _token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3MTg4NTg0NjQsImV4cCI6MTcxODkyOTgwNCwibmJmIjoxNzE4ODU4NDY0LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbWM3TGdvZVY4b2t1TkZ2cnVUaGs5aTlqTFEtZlEyMXVVSVoxQ1F1UmdsUnp6eWZxTUFwNXZwdjNDQTZhTU5faHFJeEY0dFlfMTgzQ3JmNGxrT2V1LWQ1Sm5xNmJxdmRXS01qdEt4ZTJ3WXFaUU4xdz0iLCJkaXNwbGF5X25hbWUiOiJSQU1BTkFESEEgS0FOQUtBIERVUkdBIiwib21zIjoiSzEiLCJoc21fa2V5IjoiMDg4MjAzM2I0ZGU1NjY3MmUzYmU4YWZiODYzMzRhZTI1MWU5NTFkNDczMDRhYmU0OTllMjk4NmQiLCJmeV9pZCI6IllSMTAwNzIiLCJhcHBUeXBlIjoxMDAsInBvYV9mbGFnIjoiTiJ9.zK-yCnPp8HC_kK0Ls832sLB_-P7p4Q0nswCqXNtVBSc"
+    _key = "T6RUCIRR09-100"
     # _token, _key = getToken()
     eshwar_id = _key
     token = _token
