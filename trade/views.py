@@ -74,13 +74,13 @@ def getToken(mobile):
 def getTokenRequest(request, pk):
     trader = TradeUser.objects.get(id=pk)
     print(trader)
+
     if request.method == 'POST':
         otp = request.POST.get('otp_pin')
-        access_token = scrappingToken('fyers', otp, pk)
-        print(access_token)
-        trader.fyer_token = access_token
-        trader.token_date = datetime.datetime.now().date()
-        trader.save()
+        scrappingToken.delay('fyers', otp, pk)
+        time.sleep(20)
+        
+        
         return redirect('/admin/trade/tradeuser/')
     return render(request,'trade/tokengenerate.html',{
         'trader_name': trader.trader_name

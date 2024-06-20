@@ -1,5 +1,6 @@
 
 from __future__ import print_function
+import datetime
 import requests
 import time
 from endpoints import *
@@ -13,6 +14,7 @@ from fyers_api import fyersModel
 from fyers_apiv3 import fyersModel
 from trade.models import TradeUser
 from selenium.webdriver.chrome.options import Options
+from celery import task
 
 CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
 WINDOW_SIZE = "1920,1080"
@@ -45,7 +47,7 @@ def fyersToken(auth_code, redirect_uri, client_id, secret_key):
     # Print the response, which should contain the access token and other details
     return response['access_token']
 
-
+@task
 def scrappingToken(broker, otpNum, trader_id):
     trader = TradeUser.objects.get(id=trader_id)
     mobile = trader.mobile
@@ -147,4 +149,8 @@ def scrappingToken(broker, otpNum, trader_id):
         auth_code = get_url.split('&')[2].split('=')[1]
         token = fyersToken(auth_code, redirect_uri, client_id, secret_key )
 
-    return token
+    trader.fyer_token = token
+    trader.token_date = datetime.datetime.now().date()
+    trader.save()
+
+    # return token
