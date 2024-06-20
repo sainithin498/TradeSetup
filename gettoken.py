@@ -45,11 +45,6 @@ def fyersToken(auth_code, redirect_uri, client_id, secret_key):
     # Print the response, which should contain the access token and other details
     return response['access_token']
 
-# def dbconn():
-#     con = sqlite3.connect("trade.db")
-#     cur = con.cursor()
-#     cur.execute("CREATE TABLE tradeorders(option, orderId)")
-#     cur.execute("CREATE TABLE Token(token)")
 
 def scrappingToken(broker, otpNum, trader_id):
     trader = TradeUser.objects.get(id=trader_id)
@@ -67,19 +62,11 @@ def scrappingToken(broker, otpNum, trader_id):
         ser = Service(CHROMEDRIVER_PATH)
 
         chrome_options = Options()
-        
-        chrome_options.add_argument("--headless")
-        # chrome_options.add_argument(f"--window-size={WINDOW_SIZE}")
-        chrome_options.add_argument('--no-sandbox')
-        # chrome_options.add_argument('--disable-dev-shm-usage')
-        # chrome_options.add_argument('--remote-debugging-port=9222')  # This option often helps with DevToolsActivePort issues
 
-        # preferences = {
-        #             #"download.default_directory": download_dir ,
-        #             "directory_upgrade": False,
-        #             "safebrowsing.enabled": False }
-        # chrome_options.add_experimental_option("prefs", preferences)
-       
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--no-sandbox')        
+        chrome_options.add_argument('--disable-dev-shm-usage')
+
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':
         loginUrl = UPSTOX_AUTHORISE
@@ -90,11 +77,13 @@ def scrappingToken(broker, otpNum, trader_id):
         time.sleep(2)
 
         driver.find_element(By.ID, "otpNum").send_keys(otpNum) ## Enter
+        time.sleep(1)
 
         driver.find_element(By.ID, "continueBtn").click()
         time.sleep(2)
 
-        driver.find_element(By.ID, "pinCode").send_keys(pin)
+        driver.find_element(By.ID, "pinCode").send_keys(pinNumber)
+        time.sleep(1)
 
         driver.find_element(By.ID, "pinContinueBtn").click()
         time.sleep(3)
@@ -159,15 +148,3 @@ def scrappingToken(broker, otpNum, trader_id):
         token = fyersToken(auth_code, redirect_uri, client_id, secret_key )
 
     return token
-
-
-# def logout():
-#     url = LOGOUT
-#     response = requests.delete(url, headers=getdBToken())
-#     print(response.json())
-    
-# if __name__ == '__main__':
-#     # execute only if run as the entry point into the program
-#     scrappingToken('fyers')
-    # logout()
-   
