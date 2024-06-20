@@ -8,7 +8,7 @@ from rest_framework import parsers, renderers, serializers, status, viewsets
 import json
 import datetime
 from trade.models import *
-from gettoken import scrappingToken
+from trade.gettoken import scrappingToken
 import time
 
 # Create your views here.
