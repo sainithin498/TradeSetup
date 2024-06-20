@@ -69,16 +69,16 @@ def scrappingToken(broker, otpNum, trader_id):
         chrome_options = Options()
         
         chrome_options.add_argument("--headless")
-        chrome_options.add_argument(f"--window-size={WINDOW_SIZE}")
+        # chrome_options.add_argument(f"--window-size={WINDOW_SIZE}")
         chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument('--remote-debugging-port=9222')  # This option often helps with DevToolsActivePort issues
+        # chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_argument('--remote-debugging-port=9222')  # This option often helps with DevToolsActivePort issues
 
-        preferences = {
-                    #"download.default_directory": download_dir ,
-                    "directory_upgrade": False,
-                    "safebrowsing.enabled": False }
-        chrome_options.add_experimental_option("prefs", preferences)
+        # preferences = {
+        #             #"download.default_directory": download_dir ,
+        #             "directory_upgrade": False,
+        #             "safebrowsing.enabled": False }
+        # chrome_options.add_experimental_option("prefs", preferences)
        
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':

@@ -77,6 +77,8 @@ def getTokenRequest(request, pk):
     if request.method == 'POST':
         otp = request.POST.get('otp_pin')
         access_token = scrappingToken('fyers', otp, pk)
+        access_token = scrappingToken('upstox', otp, pk)
+
         print(access_token)
         trader.fyer_token = access_token
         trader.token_date = datetime.datetime.now().date()
