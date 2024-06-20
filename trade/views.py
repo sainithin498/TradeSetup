@@ -59,8 +59,12 @@ def getStrikePrice(spot, index, _type):
     return strike, qty
 
 
-def getToken():
-    trduser = TradeUser.objects.filter(is_active=True).last()
+def getToken(mobile):
+    print(mobile)
+    if mobile:
+        trduser = TradeUser.objects.filter(mobile=mobile).last()
+    else:
+        trduser = TradeUser.objects.filter(is_active=True).last()
     fyer_token = trduser.fyer_token
     fyer_key = trduser.fyer_key
     return fyer_token, fyer_key
@@ -87,7 +91,8 @@ def buyOrder(request):
     jsonData = json.loads(request.body)
     spot = jsonData.get('price')
     index = jsonData.get('index')
-   
+    mobile = jsonData.get('mobile', None)
+       
     strike, qty = getStrikePrice(spot, index, 'BUY')
     quantity = jsonData.get('qty', None)
     offlineOrder = jsonData.get('offlineOrder', None)
@@ -107,10 +112,11 @@ def buyOrder(request):
     "orderTag":"tag1"
     }
     print(eshwar_data)
-    _token, _key = getToken()
+    _token, _key = getToken(mobile)
     eshwar_id = _key
     token = _token
     tradeUser = TradeUser.objects.get(fyer_key = _key)
+    print(tradeUser)
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
@@ -154,6 +160,8 @@ def sellOrder(request):
     index = jsonData.get('index')
     quantity = jsonData.get('qty', None)
     offlineOrder = jsonData.get('offlineOrder', None)
+    mobile = jsonData.get('mobile', None)
+
    
     strike, qty = getStrikePrice(spot, index, "SELL")
     if quantity:
@@ -172,11 +180,11 @@ def sellOrder(request):
     "orderTag":"tag1"
     }
     
-    _token, _key = getToken()
+    _token, _key = getToken(mobile)
     eshwar_id = _key
     token = _token
     tradeUser = TradeUser.objects.get(fyer_key = _key)
-
+    print(tradeUser)
     eshwar = fyersModel.FyersModel(client_id=eshwar_id, token=token, log_path="")
     try:
         response = eshwar.exit_positions(data={})
