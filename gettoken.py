@@ -14,7 +14,7 @@ from fyers_api import fyersModel
 from fyers_apiv3 import fyersModel
 from trade.models import TradeUser
 from selenium.webdriver.chrome.options import Options
-from celery import task
+from celery import shared_task
 
 CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
 WINDOW_SIZE = "1920,1080"
@@ -47,7 +47,7 @@ def fyersToken(auth_code, redirect_uri, client_id, secret_key):
     # Print the response, which should contain the access token and other details
     return response['access_token']
 
-@task
+@shared_task
 def scrappingToken(broker, otpNum, trader_id):
     trader = TradeUser.objects.get(id=trader_id)
     mobile = trader.mobile
