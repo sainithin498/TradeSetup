@@ -21,6 +21,8 @@ WINDOW_SIZE = "1920,1080"
 
 
 def fyersToken(auth_code, redirect_uri, client_id, secret_key):
+    if not auth_code:
+        auth_code = str(input("Enter auth code"))
 
     redirect_uri= redirect_uri  ## redircet_uri you entered while creating APP.
     client_id = client_id                      ## Client_id here refers to APP_ID of the created app
@@ -47,7 +49,7 @@ def fyersToken(auth_code, redirect_uri, client_id, secret_key):
     # Print the response, which should contain the access token and other details
     return response['access_token']
 
-@shared_task
+# @shared_task
 def scrappingToken(broker, otpNum, trader_id):
     trader = TradeUser.objects.get(id=trader_id)
     mobile = trader.mobile

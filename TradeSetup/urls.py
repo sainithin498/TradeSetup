@@ -16,10 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from trade.views import getTokenRequest
+from trade.views import getTokenRequest, getBalanceRequest
 
 urlpatterns = [
     path('admin/trade/<int:pk>/token/',  getTokenRequest),
+    path('admin/trade/<int:pk>/balance/',  getBalanceRequest),    
     path('admin/', admin.site.urls),
     path('trade/', include('trade.urls'))
 ]
