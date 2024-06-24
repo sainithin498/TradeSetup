@@ -56,7 +56,8 @@ def getStrikePrice(spot, index, _type):
     value, code = roundnearest(int(spot), _type)
     print(value)
     try:
-        points = strikepointMaster.objects.get(index=index, weekday=week)
+        points = strikepointMaster.objects.get(index=index, weekday=week).trade_round_points
+
     except:
         points = 500
     if _type == 'BUY':
@@ -293,6 +294,17 @@ def exitOrder(request, key):
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
+def findSymbol(netPositions, symbol, _side):
+    exist = False
+    qty = 0
+    
+    for pos in netPositions:
+        if pos['symbol'] == symbol and pos['side'] == _side:
+            exist = True
+            qty = pos['netQty']
+            break;
+    return exist, qty
+            
 
 
 @api_view(["GET", "POST"])
@@ -319,7 +331,13 @@ def buystockOrder(request):
 
     _token, _key = getToken(mobile)    
     tradeUser = TradeUser.objects.get(fyer_key = _key)
+    netPositions = []
     session = fyersModel.FyersModel(client_id=_key, token=_token)
+
+    if 'netPositions' in session.positions():
+        netPositions = session.positions()['netPositions']
+
+    
     if quantity:
         qty = quantity
     else:
