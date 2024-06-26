@@ -11,6 +11,6 @@ urlpatterns = [
     path('sellstockorder/', views.sellstockOrder), 
     path('checkprofile/<str:key>/', views.checkProfile),
     path('optionorder/', views.optionOrder),    
-    path('optionexit/', views.optionExit),
+    path('exitbyid/', views.exitbyId),
 
 ]

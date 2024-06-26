@@ -156,7 +156,7 @@ def buyOrder(request):
         "stopPrice":0,
         "validity":"DAY",
         "disclosedQty":0,
-        "offlineOrder":True if offlineOrder == "True" else False,
+        "offlineOrder":True if offlineOrder and offlineOrder == "True"  else False,
         "orderTag":"tag1"
     }
     print(data)
@@ -236,7 +236,7 @@ def sellOrder(request):
         "stopPrice":0,
         "validity":"DAY",
         "disclosedQty":0,
-        "offlineOrder":True if offlineOrder == "True" else False,
+        "offlineOrder": True if offlineOrder and offlineOrder == "True"  else False,
         "orderTag":"tag1"
     }
     
@@ -356,7 +356,7 @@ def buystockOrder(request):
         "stopPrice":0,
         "validity":"DAY",
         "disclosedQty":0,
-        "offlineOrder":True if offlineOrder == "True" else False,
+        "offlineOrder":True if offlineOrder and offlineOrder == "True"  else False,
         "orderTag":"tag1"
     }
     
@@ -412,7 +412,7 @@ def sellstockOrder(request):
         "stopPrice":0,
         "validity":"DAY",
         "disclosedQty":0,
-        "offlineOrder":True if offlineOrder == "True" else False,
+        "offlineOrder":True if offlineOrder and offlineOrder == "True"  else False,
         "orderTag":"tag1"
     }
   
@@ -457,7 +457,7 @@ def optionOrder(request):
         "stopPrice":0,
         "validity":"DAY",
         "disclosedQty":0,
-        "offlineOrder":True if offlineOrder == "True" else False,
+        "offlineOrder":True if offlineOrder and offlineOrder == "True"  else False,
         "orderTag":"tag1"
     }
     print(data)
@@ -476,7 +476,7 @@ def optionOrder(request):
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
 @api_view(['GET', 'POST'])
-def optionExit(request):
+def exitbyId(request):
     """data = {
         "symbol": "NSE:BANKNIFTY24JUN51000CE-MARGIN",
         "mobile": 8977810371
@@ -500,7 +500,7 @@ def optionExit(request):
 
 @api_view(["GET"])
 def checkProfile(request, key):  
-    """/trade/checkprofile/ISORT89TOC-100/"""
+    """http://65.0.99.151/trade/checkprofile/ISORT89TOC-100/"""
     if key:
         try:
             user = TradeUser.objects.get(fyer_key=key)
