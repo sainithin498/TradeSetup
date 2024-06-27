@@ -11,6 +11,8 @@ from trade.models import *
 from trade.gettoken import scrappingToken
 import time
 from django.contrib import messages
+from concurrent.futures import ThreadPoolExecutor
+
 
 # Create your views here.
 
@@ -40,7 +42,8 @@ def dategeneration(weekday):
     if days_ahead < 0: 
         days_ahead += 7
     resDt =  today + datetime.timedelta(days_ahead)
-    year, month, date = resDt.year, resDt.month, resDt.day
+    
+    year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
     return year, month, date, week
 
 def getStrikePrice(spot, index, _type):
@@ -64,8 +67,8 @@ def getStrikePrice(spot, index, _type):
         value -= points
     else:
         value += points
-    # strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
-    strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
+    strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
+    # strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
     return strike, qty
 
 
@@ -498,15 +501,35 @@ def exitbyId(request):
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
 
+def execite(user):
+    try:
+        session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token, log_path="")
+        return user.trader_name, session.get_profile()
+
+
+    except Exception as e:
+        print(str(e))
+        return str(e)
+
 @api_view(["GET"])
-def checkProfile(request, key):  
+def checkProfile(request):  
     """http://65.0.99.151/trade/checkprofile/ISORT89TOC-100/"""
-    if key:
-        try:
-            user = TradeUser.objects.get(fyer_key=key)
-            session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token, log_path="")
-            return JsonResponse({'success':True , "data":session.get_profile()},status=status.HTTP_200_OK)
+    active_trader_objects =  TradeUser.objects.all() #filter(is_active=True)
+    results = []
+
+    with ThreadPoolExecutor(max_workers=16) as executor:
+        futures = [executor.submit(execite, record) for record in active_trader_objects]
+        for future in futures:
+            response = future.result()
+            results.append(response)
+            
+    
+    # if key:
+    #     try:
+    #         user = TradeUser.objects.get(fyer_key=key)
+    #         session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token, log_path="")
+    return JsonResponse({'success':True , "data":results},status=status.HTTP_200_OK)
 
 
-        except Exception as e:
-            return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+    #     except Exception as e:
+    #         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)

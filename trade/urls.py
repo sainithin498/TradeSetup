@@ -9,7 +9,7 @@ urlpatterns = [
     path('exitorder/<str:key>/', views.exitOrder),
     path('buystockorder/', views.buystockOrder),
     path('sellstockorder/', views.sellstockOrder), 
-    path('checkprofile/<str:key>/', views.checkProfile),
+    path('checkprofile/', views.checkProfile),
     path('optionorder/', views.optionOrder),    
     path('exitbyid/', views.exitbyId),
 
