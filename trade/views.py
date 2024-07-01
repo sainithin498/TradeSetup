@@ -13,75 +13,10 @@ import time
 from django.contrib import messages
 from concurrent.futures import ThreadPoolExecutor
 
+from trade.utils import execute, getStrikePrice, getToken, savingResponse
+
 
 # Create your views here.
-
-def savingResponse(tradeUser, response, requestpath, symbol=None):
-    data = {
-        'trade_user_id':tradeUser,
-        'response': response,
-        'requestpath': requestpath,
-        'symbol': symbol
-    }
-    tradeResponse.objects.create(**data)
-
-def roundnearest(val, _type):
-    prcn = val%100
-    if _type == 'BUY':
-        res = val-prcn
-        code = 'CE'
-    else:
-        res = 100 + val-prcn
-        code = 'PE'
-    return res, code
-
-def dategeneration(weekday):
-    today = datetime.datetime.now().date()
-    week = today.weekday()
-    days_ahead = weekday - week
-    if days_ahead < 0: 
-        days_ahead += 7
-    resDt =  today + datetime.timedelta(days_ahead)
-    
-    year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
-    return year, month, date, week
-
-def getStrikePrice(spot, index, _type):
-    """Using for index alerts, not for option alerts"""
-    """NSE:NIFTY2292217000CE"""
-    if index == 'NIFTY':
-        weekday = 3
-        qty = 25
-    elif index == 'BANKNIFTY':
-        weekday = 2
-        qty = 15
-    year, month, date, week = dategeneration(weekday)
-    value, code = roundnearest(int(spot), _type)
-    print(value)
-    try:
-        points = strikepointMaster.objects.get(index=index, weekday=week).trade_round_points
-
-    except:
-        points = 500
-    if _type == 'BUY':
-        value -= points
-    else:
-        value += points
-    strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
-    # strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
-    return strike, qty
-
-
-def getToken(mobile):
-    print(mobile)
-    if mobile:
-        trduser = TradeUser.objects.filter(mobile=mobile).last()
-    else:
-        trduser = TradeUser.objects.filter(is_active=True).last()
-    fyer_token = trduser.fyer_token
-    fyer_key = trduser.fyer_key
-    return fyer_token, fyer_key
-
 
 def getTokenRequest(request, pk):
     trader = TradeUser.objects.get(id=pk)
@@ -119,6 +54,84 @@ def getBalanceRequest(request, pk):
         
     return redirect('/admin/trade/tradeuser/')
   
+def multiOrderExecute(user, data, qty, path):
+    common_data = {
+        "qty": qty,    
+        "type":2,
+        "side":1,
+        "productType":"MARGIN",
+        "limitPrice":0,
+        "stopPrice":0,
+        "validity":"DAY",
+        "disclosedQty":0,
+        "orderTag":"tag1"
+    }
+    if not qty:
+        if 'BANKNIFTY' in data['symbol']:
+            qty = user.bn_option_quantity if user.bn_option_quantity else 15
+        else:
+            qty = user.nf_option_quantity if user.nf_option_quantity else 25
+        common_data['qty'] = qty
+    data.update(common_data)
+    session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token)
+    try:
+        _response = session.place_order(data=data)
+        # savingResponse(user.id, _response, path, data['symbol'])
+        return user.id, user.trader_name, _response
+    
+    except Exception as e:
+        return str(e)
+    
+@api_view(["GET", "POST"])
+def buyindexAlertOrder(request):
+    """Buy order placing for index alerts"""
+    """/trade/buyindexorder/"""
+    """data = {
+        "symbol": "NIFTY/BANKNIFTY",
+        "price": 51231, #spot price
+        "qty": 15*x/25*x,
+        "offlineOrder": "True/False",
+        "mobile": "8977810371" #trader mobile
+        "_type": "BUY"
+    }"""
+    print('body-----------------------', request.body)
+    jsonData = json.loads(request.body)
+    spot = jsonData.get('price')
+    index = jsonData.get('symbol')
+    quantity = jsonData.get('qty', None)
+    offlineOrder = jsonData.get('offlineOrder', None)
+    trend = jsonData.get('trend', None)
+    mobile = jsonData.get('mobile', None) 
+
+    if trend == "CE":
+        _type = "BUY"
+    else:
+        _type = "SELL"
+    strike = getStrikePrice(spot, index, _type)
+    
+    data = {
+        "symbol":strike,       
+        "offlineOrder":True if offlineOrder and offlineOrder == "True"  else False,
+    }
+    if not mobile:
+        active_trader_objects = TradeUser.objects.filter(is_active=True)
+    else:
+        active_trader_objects = TradeUser.objects.filter(mobile=mobile)
+    try:
+        results = []
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            futures = [executor.submit(multiOrderExecute, record, data, quantity, request.path) for record in active_trader_objects]
+            for future in futures:
+                response = future.result()
+                results.append(response)
+                savingResponse(response[0], response[2], request.path, data['symbol'])
+
+        return JsonResponse({'message':'Order placed successfully','success':True, "data": results},status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        print("Some error occured in Eshwar account:", str(e))
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
 
 @api_view(["GET", "POST"])
 def buyOrder(request):
@@ -195,8 +208,6 @@ def buyOrder(request):
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
-     
-            
 
 @api_view(["GET", "POST"])
 def sellOrder(request):
@@ -276,16 +287,15 @@ def sellOrder(request):
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
-            
+
 @api_view(["GET", "POST"])        
 def exitOrder(request, key):
     """exitorder/<str:key>/"""
     """Using to exit all positions for a user"""
-    
     tradeUser = TradeUser.objects.get(fyer_key = key)
     _token, _key = getToken(tradeUser.mobile)
-    
-    session = fyersModel.FyersModel(client_id=_key, token=_token)
+     
+    session = fyersModel.FyersModel(client_id=_key, token=_token)    
     try:
         response = session.exit_positions(data={})
         print(response)
@@ -296,18 +306,6 @@ def exitOrder(request, key):
         
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
-
-def findSymbol(netPositions, symbol, _side):
-    exist = False
-    qty = 0
-    
-    for pos in netPositions:
-        if pos['symbol'] == symbol and pos['side'] == _side:
-            exist = True
-            qty = pos['netQty']
-            break;
-    return exist, qty
-            
 
 
 @api_view(["GET", "POST"])
@@ -334,12 +332,7 @@ def buystockOrder(request):
 
     _token, _key = getToken(mobile)    
     tradeUser = TradeUser.objects.get(fyer_key = _key)
-    netPositions = []
     session = fyersModel.FyersModel(client_id=_key, token=_token)
-
-    if 'netPositions' in session.positions():
-        netPositions = session.positions()['netPositions']
-
     
     if quantity:
         qty = quantity
@@ -480,56 +473,57 @@ def optionOrder(request):
 
 @api_view(['GET', 'POST'])
 def exitbyId(request):
-    """data = {
+
+    """
+    url = "/trade/exitbyid/"
+    data = {
         "symbol": "NSE:BANKNIFTY24JUN51000CE-MARGIN",
-        "mobile": 8977810371
+        "mobile": 8977810371,
+        "trend": "PE"/"CE"
     }"""
     jsonData = json.loads(request.body)
     symbol = jsonData.get('symbol', None)
     mobile = jsonData.get("mobile", None)
+    trend = jsonData.get('trend', None) # "CE"/"PE"
 
     _token, _key = getToken(mobile)
     tradeUser = TradeUser.objects.get(fyer_key = _key)
+    
+    session = fyersModel.FyersModel(client_id=_key, token=_token)
+    openPositions=[symbol]
+    if not symbol and (trend and 'netPositions' in session.positions()):
+        netPositions = session.positions()['netPositions']
+        openPositions = [ pos['id'] for pos in netPositions if pos['qty']>0 and trend in pos['id']]
+            
+    if not len(openPositions)>0:
+        savingResponse(tradeUser.id, "No Open Postions for {}".format(trend), request.path, openPositions)
+        
+        return JsonResponse({'message':'Please Provide Symbol','success':True},status=status.HTTP_200_OK)
+    
     session = fyersModel.FyersModel(client_id=_key, token=_token,is_async=False)
-    data = { "id": symbol  }
+    data = { "id": openPositions }
     try:
         response = session.exit_positions(data=data)
-        savingResponse(tradeUser.id, response, request.path, symbol)
+        savingResponse(tradeUser.id, response, request.path, openPositions)
         return JsonResponse({'message':'Exit postitions successfully','success':True},status=status.HTTP_200_OK)
         
     except Exception as e:        
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
 
-def execite(user):
-    try:
-        session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token, log_path="")
-        return user.trader_name, session.get_profile()
-
-
-    except Exception as e:
-        print(str(e))
-        return str(e)
-
 @api_view(["GET"])
 def checkProfile(request):  
     """http://65.0.99.151/trade/checkprofile/ISORT89TOC-100/"""
-    active_trader_objects =  TradeUser.objects.all() #filter(is_active=True)
+    active_trader_objects =  TradeUser.objects.all()
     results = []
+    try:
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            futures = [executor.submit(execute, record) for record in active_trader_objects]
+            for future in futures:
+                response = future.result()
+                results.append(response)
 
-    with ThreadPoolExecutor(max_workers=16) as executor:
-        futures = [executor.submit(execite, record) for record in active_trader_objects]
-        for future in futures:
-            response = future.result()
-            results.append(response)
-            
-    
-    # if key:
-    #     try:
-    #         user = TradeUser.objects.get(fyer_key=key)
-    #         session = fyersModel.FyersModel(client_id=user.fyer_key, token=user.fyer_token, log_path="")
-    return JsonResponse({'success':True , "data":results},status=status.HTTP_200_OK)
+        return JsonResponse({'success':True , "data":results},status=status.HTTP_200_OK)
 
-
-    #     except Exception as e:
-    #         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+    except Exception as e:
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
