@@ -55,6 +55,8 @@ def getStrikePrice(spot, index, _type):
         value -= points
     else:
         value += points
+    # value - 51400%500 +500
+    # round(value / 500) * 500
     strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
     # strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
     return strike#, qty
