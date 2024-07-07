@@ -20,7 +20,8 @@ from trade.views import getTokenRequest, getBalanceRequest
 
 urlpatterns = [
     path('admin/trade/<int:pk>/token/',  getTokenRequest),
-    path('admin/trade/<int:pk>/balance/',  getBalanceRequest),    
+    path('admin/trade/<int:pk>/<str:broker>/balance/',  getBalanceRequest),
     path('admin/', admin.site.urls),
-    path('trade/', include('trade.urls'))
+    path('trade/', include('trade.urls')),
+
 ]

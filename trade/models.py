@@ -18,6 +18,7 @@ class TradeUser(models.Model):
     redirect_uri = models.CharField(max_length=100, blank=True, null=True)
     secret_key = models.CharField(max_length=100, blank=True, null=True)
     symbol = models.CharField(max_length=50, blank=True, null=True)
+    
 
     def __str__(self):
         return f'{self.trader_name}' 
@@ -45,5 +46,34 @@ class Transaction(models.Model):
     is_close = models.BooleanField(default=False)
 
 
+class UpstoxUser(models.Model):
+    trader_name = models.CharField(max_length=50)
+    upstox_token = models.TextField()
+    upstox_key = models.CharField(max_length=50, unique=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    mobile = models.CharField(unique=True)
+    pin = models.CharField(max_length=10, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    balance = models.IntegerField(default=0)
+    stock_quantity = models.IntegerField(blank=True, null=True)
+    bn_option_quantity = models.IntegerField(blank=True, null=True)
+    nf_option_quantity = models.IntegerField(blank=True, null=True)
+    token_date = models.DateField(blank=True, null=True)
+    redirect_uri = models.CharField(max_length=100, blank=True, null=True)
+    upstox_secret_key = models.CharField(max_length=100, blank=True, null=True)
+    symbol = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.trader_name}' 
+
+class UpstoxOrder(models.Model):
+    trader = models.ForeignKey('UpstoxUser', related_name='order_trader', on_delete=models.CASCADE)    
+    order_id = models.CharField(max_length=50)
+    symbol = models.CharField(max_length=50)
+    trend = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_open = models.BooleanField(default=True)
+    closed_at = models.DateTimeField(blank=True, null=True)
+    
     
 

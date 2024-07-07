@@ -7,12 +7,15 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
 import json
 import datetime
+from trade.endpoints import FUND_MARGIN, ORDER_DETAILS, PLACE_ORDER
 from trade.models import *
 from trade.gettoken import scrappingToken
 import time
 from django.contrib import messages
 from concurrent.futures import ThreadPoolExecutor
-
+import requests
+from django.conf import settings
+import pandas as pd
 from trade.utils import execute, getStrikePrice, getToken, savingResponse
 
 
@@ -34,25 +37,48 @@ def getTokenRequest(request, pk):
     })
 
 
-def getBalanceRequest(request, pk):
-    trader = TradeUser.objects.get(id=pk)
+def getBalanceRequest(request, pk, broker):
+    if broker == 'fyers':
+        trader = TradeUser.objects.get(id=pk)
 
-    session = fyersModel.FyersModel(client_id=trader.fyer_key, token=trader.fyer_token)
-    try:
-        funds = session.funds()
-        amount = 0
-        for dt in funds['fund_limit']:
-            if dt['title']=="Available Balance":
-                amount = dt['equityAmount']
-                break;
-        trader.balance = amount
-        trader.save()
-        messages.success(request, 'Balance Updated for User : {}'.format(trader.trader_name))
-    except Exception as e:
-        print(str(e))
-        messages.error(request, "Please check the Token for User : {}".format(trader.trader_name))
+        session = fyersModel.FyersModel(client_id=trader.fyer_key, token=trader.fyer_token)
+        try:
+            funds = session.funds()
+            amount = 0
+            for dt in funds['fund_limit']:
+                if dt['title']=="Available Balance":
+                    amount = dt['equityAmount']
+                    break;
+            trader.balance = amount
+            trader.save()
+            messages.success(request, 'Balance Updated for User : {}'.format(trader.trader_name))
+        except Exception as e:
+            print(str(e))
+            messages.error(request, "Please check the Token for User : {}".format(trader.trader_name))
+        return redirect('/admin/trade/tradeuser/')
+    else:
+        try:
+            trader = UpstoxUser.objects.get(id=pk)
+            
+            url = FUND_MARGIN
+
+            payload={}
+            TOKEN_HEADERS = {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer {}'.format(trader.upstox_token)
+            }       
+
+            response = requests.request("GET", url, headers=TOKEN_HEADERS, data=payload)
         
-    return redirect('/admin/trade/tradeuser/')
+            response = response.json()
+            balance = response['data']['equity']['available_margin']
+            trader.balance = balance
+            trader.save()
+            messages.success(request, 'Balance Updated for User : {}'.format(trader.trader_name))
+        except Exception as e:
+            print(str(e))
+            messages.error(request, "Please check the Token for User : {}".format(trader.trader_name))
+    return redirect('/admin/trade/upstoxuser/')
   
 def multiOrderExecute(user, data, qty, path):
     common_data = {
@@ -584,4 +610,66 @@ def checkProfile(request):
         return JsonResponse({'success':True , "data":results},status=status.HTTP_200_OK)
 
     except Exception as e:
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
+
+def placeOrder(request):
+    """data = {
+        "symbol": "NIFTY/BANKNIFTY",
+        "price": 51231, #spot price
+        "qty": 15*x/25*x,
+        "offlineOrder": "True/False",
+        "mobile": "8977810371" #trader mobile
+    }"""
+    jsonData = json.loads(request.body)
+    spot = jsonData.get('price')
+    index = jsonData.get('symbol')
+    quantity = jsonData.get('qty', None)
+    offlineOrder = jsonData.get('offlineOrder', None)
+    mobile = jsonData.get('mobile', None)   
+    try:
+        strike = getStrikePrice(spot, index, 'BUY')
+        trader = UpstoxUser.objects.get(mobile= mobile)
+        TOKEN_HEADERS = {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer {}'.format(trader.upstox_token)
+                }  
+        if index in settings.NSE_INDEX:
+            data_path = settings.NSE_PATH
+        else:
+            data_path = settings.BSE_PATH
+        # NSE:BANKNIFTY2471052400CE
+        option = strike[4:]
+        print(option)
+        df = pd.read_csv(data_path)
+        
+        df = df.loc[df['tradingsymbol'] == option]
+        INSTUMENT_KEY = df.iloc[0]['instrument_key']
+        print(INSTUMENT_KEY)
+        data = {
+            "quantity": quantity,
+            "product": "I",
+            "validity": "DAY",
+            "price": 0,
+            "tag": "string",
+            "instrument_token": INSTUMENT_KEY ,
+            "order_type": "MARKET",
+            "transaction_type": "BUY",
+            "disclosed_quantity": 0,
+            "trigger_price": 0,
+            "is_amo": True if offlineOrder and offlineOrder == "True"  else False
+        }
+        url = PLACE_ORDER
+        response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+        print(response.json())
+        res = response.json()
+        orderId = res['data']
+        url = ORDER_DETAILS
+        params = orderId
+
+        response = requests.get(url, headers=TOKEN_HEADERS(), params=params)
+        print(response.json())
+        return JsonResponse({'message':'Order Not placed','success':False},status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)

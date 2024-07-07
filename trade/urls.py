@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
-from . import  views 
+from . import  views, upstox_views
+
 
 
 urlpatterns = [    
@@ -13,5 +14,12 @@ urlpatterns = [
     path('checkprofile/', views.checkProfile),
     path('optionorder/', views.optionOrder),    
     path('exitbyid/', views.exitbyId),
+
+    ### Upstox Urls
+    path('upstox/buyorder/', upstox_views.placeOrder),    
+    path('upstox/exitorderbyid/', upstox_views.exitOrderbyId),
+    path('upstox/exitall/<str:mobile>/', upstox_views.exitallOrders),
+
+
 
 ]

@@ -3,7 +3,7 @@ from __future__ import print_function
 import datetime
 import requests
 import time
-from endpoints import *
+from .endpoints import *
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
