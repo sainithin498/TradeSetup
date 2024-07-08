@@ -70,6 +70,8 @@ class UpstoxOrder(models.Model):
     trader = models.ForeignKey('UpstoxUser', related_name='order_trader', on_delete=models.CASCADE)    
     order_id = models.CharField(max_length=50)
     symbol = models.CharField(max_length=50)
+    instrument_token = models.CharField(max_length=15, blank=True, null=True)
+    qty = models.IntegerField(blank=True, null=True)
     trend = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
     is_open = models.BooleanField(default=True)

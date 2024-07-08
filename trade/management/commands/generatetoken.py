@@ -75,9 +75,9 @@ class Command(BaseCommand):
             driver.find_element(By.ID, "mobileNum").send_keys('8977810371')
             
             driver.find_element(By.ID, "getOtp").click()
-            time.sleep(2)
+            time.sleep(10)
 
-            driver.find_element(By.ID, "otpNum").send_keys('948977') ## Enter
+            # driver.find_element(By.ID, "otpNum").send_keys('277627') ## Enter
 
             driver.find_element(By.ID, "continueBtn").click()
             time.sleep(2)

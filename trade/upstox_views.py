@@ -11,12 +11,14 @@ from rest_framework import parsers, renderers, serializers, status, viewsets
 from rest_framework.decorators import api_view
 
 
-def saveplaceOrders(trader, id, symbol, trend ):
+def saveplaceOrders(trader, id, symbol, trend, instrument,qty ):
     data = {
         'order_id': id,
         'symbol': symbol,
         'trend': trend,
-        'trader_id':trader
+        'trader_id':trader,
+        'instrument_token': instrument,
+        'qty':qty
     }
     UpstoxOrder.objects.create(**data)
 
@@ -90,7 +92,7 @@ def placeOrder(request):
 
         res = response.json()
         orderId = res['data']
-        saveplaceOrders(trader.id, orderId['order_id'], option, trend)
+        saveplaceOrders(trader.id, orderId['order_id'], option, trend, INSTUMENT_KEY, quantity)
         url = ORDER_DETAILS
         # url =BROKERAGE
         # response = requests.request("GET", url, headers=TOKEN_HEADERS, data=brok_data)
@@ -106,7 +108,7 @@ def placeOrder(request):
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
 def getOrderId(trend):
-    openorders = UpstoxOrder.objects.filter(is_open=True).values_list('order_id', flat=True)
+    openorders = UpstoxOrder.objects.filter(is_open=True).values('instrument_token', 'qty')
     if trend == 'all':
         orders = openorders
     else:
@@ -129,15 +131,26 @@ def exitOrderbyId(request):
     trend = jsonData.get('trend', None)
     try:
         openOrders = getOrderId(trend)
-        print(openOrders)
         trader = UpstoxUser.objects.get(mobile=mobile)
         TOKEN_HEADERS = {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }
-        url = EXITORDER
+        data = {
+            "product": "I",
+            "validity": "DAY",
+            "price": 0,
+            "tag": "string",
+            "order_type": "MARKET",
+            "transaction_type": "SELL",
+            "disclosed_quantity": 0,
+            "trigger_price": 0,
+            "is_amo": False
+        }
         for order in openOrders:
-            response = requests.request("DELETE", url, headers=TOKEN_HEADERS, data={'order_id':order})
+            data.update({"instrument_token": order['instrument_token'],  "quantity": order['qty']})
+            url = PLACE_ORDER
+            response = requests.post(url, json=data, headers=TOKEN_HEADERS)
             print(response.json())
         openOrders.update(is_open=False, closed_at=datetime.datetime.now())
 
@@ -161,11 +174,23 @@ def exitallOrders(request, mobile):
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
             }
             openOrders = getOrderId('all')
-            url = EXITORDER
+            data = {
+                "product": "I",
+                "validity": "DAY",
+                "price": 0,
+                "tag": "string",
+                "order_type": "MARKET",
+                "transaction_type": "SELL",
+                "disclosed_quantity": 0,
+                "trigger_price": 0,
+                "is_amo": False
+            }
             for order in openOrders:
-                response = requests.request("DELETE", url, headers=TOKEN_HEADERS, data={'order_id':order})
+                data.update({"instrument_token": order['instrument_token'],  "quantity": order['qty']})
+                url = PLACE_ORDER
+                response = requests.post(url, json=data, headers=TOKEN_HEADERS)
                 print(response.json())
-            openOrders.update(is_open=False, closed_at=datetime.datetime.now())
+                openOrders.update(is_open=False, closed_at=datetime.datetime.now())
 
         return JsonResponse({'message':' All Orders Exited','success':False},status=status.HTTP_200_OK)
     except Exception as e:
