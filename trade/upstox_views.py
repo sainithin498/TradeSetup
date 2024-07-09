@@ -102,7 +102,7 @@ def placeOrder(request):
         response = requests.get(url, headers=TOKEN_HEADERS)
 
         print(response.json())
-        return JsonResponse({'message':'Order placed','success':False},status=status.HTTP_200_OK)
+        return JsonResponse({'message':'Order placed','success':True},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
@@ -154,10 +154,67 @@ def exitOrderbyId(request):
             print(response.json())
         openOrders.update(is_open=False, closed_at=datetime.datetime.now())
 
-        return JsonResponse({'message':'Order Exited','success':False},status=status.HTTP_200_OK)
+        return JsonResponse({'message':'Order Exited','success':True},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
+
+
+@api_view(["GET", "POST"])
+def upstoxStocks(request):
+    """
+    url =/trade/upstox/stockorder/
+    {
+        "stock":"IRCTC",
+        "mobile": "8977810371",
+        "qty":10,
+        "trend": "BUY"/"SELL",
+        "offlineOrder": "True"/"False"
+    }   
+    """
+    jsonData = json.loads(request.body)
+    mobile = jsonData.get('mobile', None)
+    stock = jsonData.get('stock', None)
+    qty = jsonData.get('qty', None)
+    offlineOrder = jsonData.get('offlineOrder', None)
+    trend = jsonData.get('trend', None)
+
+    try:
+        trader = UpstoxUser.objects.get(mobile=mobile)
+        TOKEN_HEADERS = {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer {}'.format(trader.upstox_token)
+        }
+        data_path = settings.NSE_PATH            
+        df = pd.read_csv(data_path)            
+        df = df.loc[df['tradingsymbol'] == stock]
+        INSTUMENT_KEY = df.iloc[0]['instrument_key']
+        
+        data = {
+            "product": "I",
+            "validity": "DAY",
+            "price": 0,
+            "tag": "string",
+            "order_type": "MARKET",
+            "transaction_type": trend,
+            "disclosed_quantity": 0,
+            "trigger_price": 0,
+            "is_amo": True if offlineOrder and offlineOrder == "True"  else False,
+            "instrument_token": INSTUMENT_KEY,  
+            "quantity": qty
+        }
+        
+        
+        url = PLACE_ORDER
+        response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+        print(response.json())
+
+        return JsonResponse({'message':' {} Stock Order Placed'.format(stock),'success':True},status=status.HTTP_200_OK)
+    except Exception as e:
+        print("Some error occured in Eshwar account:", str(e))
+        return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+
 
 
 @api_view(["GET", "POST"])
@@ -192,7 +249,7 @@ def exitallOrders(request, mobile):
                 print(response.json())
                 openOrders.update(is_open=False, closed_at=datetime.datetime.now())
 
-        return JsonResponse({'message':' All Orders Exited','success':False},status=status.HTTP_200_OK)
+        return JsonResponse({'message':' All Orders Exited','success':True},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
