@@ -208,7 +208,10 @@ def upstoxStocks(request):
         
         url = PLACE_ORDER
         response = requests.post(url, json=data, headers=TOKEN_HEADERS)
-        print(response.json())
+        res = response.json()
+        orderId = res['data']
+
+        saveplaceOrders(trader.id, orderId['order_id'], stock, trend, INSTUMENT_KEY, qty)
 
         return JsonResponse({'message':' {} Stock Order Placed'.format(stock),'success':True},status=status.HTTP_200_OK)
     except Exception as e:
