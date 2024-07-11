@@ -41,7 +41,7 @@ def getStrikePrice(spot, index, _type):
         weekday = 3
         # qty = 25
     elif index == 'BANKNIFTY':
-        weekday = 2
+        weekday = 1
         # qty = 15
     year, month, date, week = dategeneration(weekday)
     value, code = roundnearest(int(spot), _type)
