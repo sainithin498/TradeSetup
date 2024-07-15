@@ -243,6 +243,7 @@ def multiUpstoxUserorderExit(user, data):
     else:
         findoption = [ opt for opt in positions if opt['quantity']!= 0]
     instruments = []
+    payloads = []
     print('::::::::::::::::::::::::::::',findoption)
     for pos in findoption:
         if pos['quantity'] > 0 :
@@ -252,13 +253,14 @@ def multiUpstoxUserorderExit(user, data):
         payload.update({"product": pos["product"], "transaction_type": transaction_type, "instrument_token": pos['instrument_token'], 
                         "quantity": pos['quantity'] })
         url = PLACE_ORDER
-        response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+        payloads.append(payload)
+        response = requests.post(url, json=payload, headers=TOKEN_HEADERS)
         print('-----------------------',response.json())
         res.append(response.json())
         if response.json()['status'] != "error":
             instruments.append(pos['instrument_token'])
 
-    return res, instruments
+    return res, instruments, payloads
 
 
 @api_view(["GET", "POST"])
