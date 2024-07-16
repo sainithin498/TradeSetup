@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 from trade.endpoints import BROKERAGE, EXITORDER, ORDER_DETAILS, PLACE_ORDER, POSITIONS
 from trade.models import UpstoxOrder, UpstoxUser
-from trade.utils import getStrikePrice
+from trade.utils import getStrikePrice, getexpiryValue
 from django.conf import settings
 from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
@@ -295,32 +295,85 @@ def exitallOrders(request):
             
     except Exception as e:        
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
-        # if mobile:
-        #     trader = UpstoxUser.objects.get(mobile=mobile)
-        #     TOKEN_HEADERS = {
-        #             'Accept': 'application/json',
-        #             'Authorization': 'Bearer {}'.format(trader.upstox_token)
-        #     }
-        #     openOrders = getOrderId('all')
-        #     data = {
-        #         "product": "I",
-        #         "validity": "DAY",
-        #         "price": 0,
-        #         "tag": "string",
-        #         "order_type": "MARKET",
-        #         "transaction_type": "SELL",
-        #         "disclosed_quantity": 0,
-        #         "trigger_price": 0,
-        #         "is_amo": False
-        #     }
-        #     for order in openOrders:
-        #         data.update({"instrument_token": order['instrument_token'],  "quantity": order['qty']})
-        #         url = PLACE_ORDER
-        #         response = requests.post(url, json=data, headers=TOKEN_HEADERS)
-        #         print(response.json())
-        #         openOrders.update(is_open=False, closed_at=datetime.datetime.now())
+      
 
-        return JsonResponse({'message':' All Orders Exited','success':True},status=status.HTTP_200_OK)
+@api_view(["GET", "POST"])
+def placeoptionOrder(request):
+    
+    """
+    url = /trade/upstox/optionorder/
+    data = {
+        "symbol": "NIFTY/BANKNIFTY",
+        "price": 52600
+        "trend": "CE"/"PE"
+        "qty": 15*x/25*x,
+        "offlineOrder": "True/False",
+        "mobile": "8977810371" #trader mobile
+    }"""
+    jsonData = json.loads(request.body)
+    index = jsonData.get('symbol')
+    price = jsonData.get('price')
+    trend = jsonData.get('trend', None)
+    quantity = jsonData.get('qty', None)
+    offlineOrder = jsonData.get('offlineOrder', None)
+    mobile = jsonData.get('mobile', None)
+    product = jsonData.get('product', None)
+    weekday = jsonData.get('weekday', None)
+    try:
+        success = True
+        if trend == "CE":
+            _type = "BUY"
+        else:
+            _type = "SELL"
+        year, month, date, week  = getexpiryValue(index, weekday)
+        option = index.upper() + str(year)[2:] + str(month) + str(date)+ str(price) + trend
+        trader = UpstoxUser.objects.get(mobile= mobile)
+        TOKEN_HEADERS = {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer {}'.format(trader.upstox_token)
+                }  
+        if index in settings.NSE_INDEX:
+            data_path = settings.NSE_PATH
+        else:
+            data_path = settings.BSE_PATH
+        df = pd.read_csv(data_path)
+        
+        df = df.loc[df['tradingsymbol'] == option]
+        INSTUMENT_KEY = df.iloc[0]['instrument_key']
+        print(INSTUMENT_KEY , ':::::', option)
+        
+        data = {
+            "quantity": quantity,
+            "product": "D" if  product and product == "D" else "I",
+            "validity": "DAY",
+            "price": 0,
+            "tag": "string",
+            "instrument_token": INSTUMENT_KEY ,
+            "order_type": "MARKET",
+            "transaction_type": "BUY",
+            "disclosed_quantity": 0,
+            "trigger_price": 0,
+            "is_amo": True if offlineOrder and offlineOrder == "True"  else False
+        }
+       
+        url = PLACE_ORDER
+        response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+        print(response.json())
+        res = response.json()
+
+        orderId = res['data']
+
+        url = ORDER_DETAILS
+        det_res = requests.get(url, headers=TOKEN_HEADERS, params=orderId)
+        if det_res.json()['data']['status'] == 'complete':
+            message='Order placed'    
+            saveplaceOrders(trader.id, orderId['order_id'], option, trend, INSTUMENT_KEY, quantity, data['product'])
+        else:
+            success = False
+            message='Order Not placed'    
+
+      
+        return JsonResponse({'message':message,'success':success, "response": det_res.json()['data']},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)

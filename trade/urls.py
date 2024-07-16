@@ -16,8 +16,10 @@ urlpatterns = [
     path('exitbyid/', views.exitbyId),
 
     ### Upstox Urls
-    path('upstox/buyorder/', upstox_views.placeOrder),    
+    path('upstox/buyorder/', upstox_views.placeOrder),  
+    path('upstox/optionorder/', upstox_views.placeoptionOrder),
     path('upstox/exitorderbyid/', upstox_views.exitOrderbyId),
     path('upstox/exitall', upstox_views.exitallOrders),    
     path('upstox/stockorder/', upstox_views.upstoxStocks),
+    
 ]

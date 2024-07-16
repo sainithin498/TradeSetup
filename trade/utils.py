@@ -34,9 +34,7 @@ def dategeneration(weekday):
     year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
     return year, month, date, week
 
-def getStrikePrice(spot, index, _type, weekday=None):
-    """Using for index alerts, not for option alerts"""
-    """NSE:NIFTY2292217000CE"""
+def getexpiryValue(index, weekday=None ):
     if index == 'NIFTY':
         if not weekday:
             weekday = 3
@@ -46,8 +44,23 @@ def getStrikePrice(spot, index, _type, weekday=None):
             weekday = 2
         # qty = 15
     year, month, date, week = dategeneration(weekday)
+    return year, month, date, week 
+    
+
+def getStrikePrice(spot, index, _type, weekday=None):
+    """Using for index alerts, not for option alerts"""
+    """NSE:NIFTY2292217000CE"""
+    # if index == 'NIFTY':
+    #     if not weekday:
+    #         weekday = 3
+    #     # qty = 25
+    # elif index == 'BANKNIFTY':
+    #     if not weekday:
+    #         weekday = 2
+    #     # qty = 15
+    # year, month, date, week = dategeneration(weekday)
+    year, month, date, week = getexpiryValue(index, weekday)
     value, code = roundnearest(int(spot), _type)
-    print(value)
     try:
         points = strikepointMaster.objects.get(index=index, weekday=week).trade_round_points
     except:
