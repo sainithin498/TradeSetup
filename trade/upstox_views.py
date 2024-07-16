@@ -238,10 +238,12 @@ def multiUpstoxUserorderExit(user, data):
         "is_amo": False
     }
     res = []
+    findoption = [ opt for opt in positions if opt['quantity']!= 0]
     if data['symbol']:
-        findoption = [ opt for opt in positions if data['symbol'].upper() in  opt['tradingsymbol'] and opt['quantity'] != 0]
-    else:
-        findoption = [ opt for opt in positions if opt['quantity']!= 0]
+        findoption = [ opt for opt in findoption if data['symbol'].upper() in  opt['tradingsymbol'] ]
+    if data['trend']:
+        findoption = [ opt for opt in findoption if data['trend'].upper() in  opt['tradingsymbol'] ]
+
     instruments = []
     payloads = []
     print('::::::::::::::::::::::::::::',findoption)
@@ -272,6 +274,7 @@ def exitallOrders(request):
 
     mobile = request.GET.get('mobile',None)
     symbol = request.GET.get('symbol', None)
+    trend = request.GET.get('trend', None)
 
     try:
         if not mobile:
@@ -279,7 +282,8 @@ def exitallOrders(request):
         else:
             active_up_trader_objects = UpstoxUser.objects.filter(mobile=mobile)
         data = {
-            "symbol": symbol
+            "symbol": symbol,
+            "trend": trend
         }
         results = []
         with ThreadPoolExecutor(max_workers=5) as executor:

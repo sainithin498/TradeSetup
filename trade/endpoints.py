@@ -53,4 +53,3 @@ BROKERAGE = BASE_URL + '/charges/brokerage'
 EXITORDER = BASE_URL + '/order/cancel'
 
 
-
