@@ -252,6 +252,8 @@ def multiUpstoxUserorderExit(user, data):
             transaction_type = "SELL"
         else:
              transaction_type = "BUY"
+        if data['_type']:
+            transaction_type = data['_type']
         payload.update({"product": pos["product"], "transaction_type": transaction_type, "instrument_token": pos['instrument_token'], 
                         "quantity": abs(pos['quantity']) })
         url = PLACE_ORDER
@@ -275,7 +277,7 @@ def exitallOrders(request):
     mobile = request.GET.get('mobile',None)
     symbol = request.GET.get('symbol', None)
     trend = request.GET.get('trend', None)
-
+    _type = request.GET.get('type', None)
     try:
         if not mobile:
             active_up_trader_objects = UpstoxUser.objects.filter(is_active=True)
@@ -283,7 +285,8 @@ def exitallOrders(request):
             active_up_trader_objects = UpstoxUser.objects.filter(mobile=mobile)
         data = {
             "symbol": symbol,
-            "trend": trend
+            "trend": trend,
+            "_type": _type
         }
         results = []
         with ThreadPoolExecutor(max_workers=5) as executor:
