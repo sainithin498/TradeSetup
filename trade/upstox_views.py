@@ -49,20 +49,16 @@ def placeOrder(request):
     weekday = jsonData.get('weekday', None)
     try:
         success = True
-        if trend == "CE":
-            _type = "BUY"
-        else:
-            _type = "SELL"
+        _type = "BUY" if trend == "CE" else "SELL"
+
         strike = getStrikePrice(spot, index, _type, weekday)
         trader = UpstoxUser.objects.get(mobile= mobile)
         TOKEN_HEADERS = {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }  
-        if index in settings.NSE_INDEX:
-            data_path = settings.NSE_PATH
-        else:
-            data_path = settings.BSE_PATH
+        data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
+     
         option = strike[4:]
         df = pd.read_csv(data_path)
         
@@ -227,16 +223,7 @@ def multiUpstoxUserorderExit(user, data):
     url = POSITIONS
     response = requests.get(url, headers=TOKEN_HEADERS)
     positions = response.json()['data']
-    payload = {
-        "product": "I",
-        "validity": "DAY",
-        "price": 0,
-        "tag": "string",
-        "order_type": "MARKET",
-        "disclosed_quantity": 0,
-        "trigger_price": 0,
-        "is_amo": False
-    }
+    
     res = []
     findoption = [ opt for opt in positions if opt['quantity']!= 0]
     if data['symbol']:
@@ -248,12 +235,19 @@ def multiUpstoxUserorderExit(user, data):
     payloads = []
     print('::::::::::::::::::::::::::::',findoption)
     for pos in findoption:
-        if pos['quantity'] > 0 :
-            transaction_type = "SELL"
-        else:
-             transaction_type = "BUY"
-        if data['_type']:
-            transaction_type = data['_type']
+        payload = {
+            "product": "I",
+            "validity": "DAY",
+            "price": 0,
+            "tag": "string",
+            "order_type": "MARKET",
+            "disclosed_quantity": 0,
+            "trigger_price": 0,
+            "is_amo": False
+        }
+        transaction_type = "SELL" if pos['quantity'] > 0 else "BUY"
+        transaction_type = data['_type'] if data['_type'] else transaction_type
+     
         payload.update({"product": pos["product"], "transaction_type": transaction_type, "instrument_token": pos['instrument_token'], 
                         "quantity": abs(pos['quantity']) })
         url = PLACE_ORDER
@@ -326,48 +320,49 @@ def placeoptionOrder(request):
     mobile = jsonData.get('mobile', None)
     product = jsonData.get('product', None)
     weekday = jsonData.get('weekday', None)
+    order_type = jsonData.get('order_type', None)
+    trigger_price = jsonData.get('trigger_price', None)
     try:
         success = True
-        if trend == "CE":
-            _type = "BUY"
-        else:
-            _type = "SELL"
+       
         year, month, date, week  = getexpiryValue(index, weekday)
-        option = index.upper() + str(year)[2:] + str(month) + str(date)+ str(price) + trend
+        if date :
+            option = index.upper() + str(year)[2:] + str(month) + str(date)+ str(price) + trend
+        else:
+            option = index.upper() + str(year)[2:] + str(month) + str(price) + trend
         trader = UpstoxUser.objects.get(mobile= mobile)
         TOKEN_HEADERS = {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }  
-        if index in settings.NSE_INDEX:
-            data_path = settings.NSE_PATH
-        else:
-            data_path = settings.BSE_PATH
+        data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
+      
         df = pd.read_csv(data_path)
         
         df = df.loc[df['tradingsymbol'] == option]
         INSTUMENT_KEY = df.iloc[0]['instrument_key']
         print(INSTUMENT_KEY , ':::::', option)
-        
+   
         data = {
             "quantity": quantity,
             "product": "D" if  product and product == "D" else "I",
             "validity": "DAY",
-            "price": 0,
+            "price": trigger_price if trigger_price else 0,
             "tag": "string",
             "instrument_token": INSTUMENT_KEY ,
-            "order_type": "MARKET",
+            "order_type": "MARKET" if not order_type else order_type,
             "transaction_type": "BUY",
             "disclosed_quantity": 0,
-            "trigger_price": 0,
+            "trigger_price": trigger_price+.05 if trigger_price else 0 ,
             "is_amo": True if offlineOrder and offlineOrder == "True"  else False
         }
        
         url = PLACE_ORDER
         response = requests.post(url, json=data, headers=TOKEN_HEADERS)
-        print(response.json())
+        print(data)
         res = response.json()
-
+        if res['status'] == 'error':
+            return JsonResponse({'message':res,'success':False},status=status.HTTP_200_OK)
         orderId = res['data']
 
         url = ORDER_DETAILS

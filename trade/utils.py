@@ -30,8 +30,11 @@ def dategeneration(weekday):
     if days_ahead < 0: 
         days_ahead += 7
     resDt =  today + datetime.timedelta(days_ahead)
-    
-    year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
+    nxtDt = resDt + datetime.timedelta(7)
+    if  resDt.month == nxtDt.month:
+        year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
+    else:
+        year, month, date = resDt.year, resDt.strftime("%b").upper(), None
     return year, month, date, week
 
 def getexpiryValue(index, weekday=None ):
@@ -43,6 +46,16 @@ def getexpiryValue(index, weekday=None ):
         if not weekday:
             weekday = 2
         # qty = 15
+    elif index in  ['MIDCPNIFTY', 'BANKEX']:
+        if not weekday:
+            weekday = 0
+    elif index == 'FINNIFTY':
+        if not weekday:
+            weekday = 1
+    elif index == 'SENSEX':
+        if not weekday:
+            weekday = 4
+            
     year, month, date, week = dategeneration(weekday)
     return year, month, date, week 
     
@@ -50,34 +63,34 @@ def getexpiryValue(index, weekday=None ):
 def getStrikePrice(spot, index, _type, weekday=None):
     """Using for index alerts, not for option alerts"""
     """NSE:NIFTY2292217000CE"""
-    # if index == 'NIFTY':
-    #     if not weekday:
-    #         weekday = 3
-    #     # qty = 25
-    # elif index == 'BANKNIFTY':
-    #     if not weekday:
-    #         weekday = 2
-    #     # qty = 15
-    # year, month, date, week = dategeneration(weekday)
+ 
     year, month, date, week = getexpiryValue(index, weekday)
     value, code = roundnearest(int(spot), _type)
     try:
         points = strikepointMaster.objects.get(index=index, weekday=week).trade_round_points
     except:
         points = 500
-    if index == 'NIFTY':
+    if index in ['NIFTY', 'FINNIFTY']:
         points = points/2
+    elif index == 'MIDCPNIFTY':
+        points = points/4
 
     if _type == 'BUY':
         value -= points
     else:
         value += points
-    if index == 'NIFTY':
+    if index in ['NIFTY', 'FINNIFTY']:
         value =  round(value / 200) * 200
-    else:
+    
+    elif index == 'MIDCPNIFTY':
+        value =  round(value / 100) * 100
+    
+    elif index == 'BANKNIFTY':
         value = round(value / 500) * 500
-    strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date)+ str(value) + code
-    # strike = "NSE:" + index.upper() + str(year)[2:] + "JUN"+ str(value) + code
+    if date:    
+        strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date) + str(value) + code
+    else:
+        strike = "NSE:" + index.upper() + str(year)[2:] + month + str(value) + code
     return strike#, qty
 
 
