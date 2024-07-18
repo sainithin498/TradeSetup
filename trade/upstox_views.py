@@ -211,7 +211,7 @@ def upstoxStocks(request):
         res = response.json()
         orderId = res['data']
 
-        saveplaceOrders(trader.id, orderId['order_id'], stock, trend, INSTUMENT_KEY, qty)
+        saveplaceOrders(trader.id, orderId['order_id'], stock, trend, INSTUMENT_KEY, qty, data['product'])
 
         return JsonResponse({'message':' {} Stock Order Placed'.format(stock),'success':True},status=status.HTTP_200_OK)
     except Exception as e:
@@ -253,7 +253,7 @@ def multiUpstoxUserorderExit(user, data):
         else:
              transaction_type = "BUY"
         payload.update({"product": pos["product"], "transaction_type": transaction_type, "instrument_token": pos['instrument_token'], 
-                        "quantity": pos['quantity'] })
+                        "quantity": abs(pos['quantity']) })
         url = PLACE_ORDER
         payloads.append(payload)
         response = requests.post(url, json=payload, headers=TOKEN_HEADERS)
