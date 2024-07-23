@@ -11,8 +11,7 @@ from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
 from rest_framework.decorators import api_view
 
-
-def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product ):
+def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product, index=None, expiry=None, triggerprice=None ):
     data = {
         'order_id': id,
         'symbol': symbol,
@@ -20,7 +19,10 @@ def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product ):
         'trader_id':trader,
         'instrument_token': instrument,
         'qty':qty,
-        'product': product
+        'product': product,
+        'index' : index,
+        'expiry' : expiry,
+        'trigger_price': triggerprice
     }
     UpstoxOrder.objects.create(**data)
 
@@ -50,7 +52,6 @@ def placeOrder(request):
     try:
         success = True
         _type = "BUY" if trend == "CE" else "SELL"
-
         strike = getStrikePrice(spot, index, _type, weekday)
         trader = UpstoxUser.objects.get(mobile= mobile)
         TOKEN_HEADERS = {
@@ -64,7 +65,7 @@ def placeOrder(request):
         
         df = df.loc[df['tradingsymbol'] == option]
         INSTUMENT_KEY = df.iloc[0]['instrument_key']
-        print(INSTUMENT_KEY , ':::::', option)
+        print(INSTUMENT_KEY , ':::::', option)       
         data = {
             "quantity": quantity,
             "product": "D" if  product and product == "D" else "I",
@@ -78,31 +79,67 @@ def placeOrder(request):
             "trigger_price": 0,
             "is_amo": True if offlineOrder and offlineOrder == "True"  else False
         }
-       
-        url = PLACE_ORDER
-        response = requests.post(url, json=data, headers=TOKEN_HEADERS)
-        print(response.json())
-        res = response.json()
 
-        orderId = res['data']
+        if trader.is_active:
+            url = PLACE_ORDER
+            response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+            print(response.json())
+            res = response.json()
 
-        url = ORDER_DETAILS
-        det_res = requests.get(url, headers=TOKEN_HEADERS, params=orderId)
-        if det_res.json()['data']['status'] == 'complete':
-            message='Order placed'    
-            saveplaceOrders(trader.id, orderId['order_id'], option, trend, INSTUMENT_KEY, quantity, data['product'])
+            orderId = res['data']
+
+            url = ORDER_DETAILS
+
+            det_res = requests.get(url, headers=TOKEN_HEADERS, params=orderId)
+            if det_res.json()['data']['status'] == 'complete':
+                message='Order placed'    
+                saveplaceOrders(trader.id, orderId['order_id'], option, trend, INSTUMENT_KEY, quantity, 
+                                data['product'],index )
+            else:
+                success = False
+                message='Order Not placed'    
+            data = det_res.json()['data']
         else:
-            success = False
-            message='Order Not placed'    
+            today = datetime.datetime.now().date()
+            week = today.weekday()
+            if index == 'NIFTY':
+                instrument_key = "NSE_INDEX|Nifty 50"
+                if not weekday:
+                    weekday = 3
+            else:
+                instrument_key =  "NSE_INDEX|Nifty Bank"
+                if not weekday:
+                    weekday = 2
+            days_ahead = weekday - week
+            if days_ahead < 0: 
+                days_ahead += 7
+            resDt =  today + datetime.timedelta(days_ahead)
+            year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
+           
+            optionch = "https://api.upstox.com/v2/option/chain?instrument_key=" +instrument_key + "&expiry_date=" \
+                +str(year)+'-'+str(month)+'-'+str(date)
 
+            _res = requests.get(optionch, headers=TOKEN_HEADERS)
+            _res = _res.json()
+            option_strike = option[-7:][:5]
+            if trend == 'CE':
+                optchain_strk = [ele['call_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
+            else:
+                optchain_strk = [ele['put_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
+            saveplaceOrders(trader.id, "Testing", option, trend, INSTUMENT_KEY, quantity, 
+                                data['product'],index, str(year)+'-'+str(month)+'-'+str(date), optchain_strk )
+            message = INSTUMENT_KEY
       
-        return JsonResponse({'message':message,'success':success, "response": det_res.json()['data']},status=status.HTTP_200_OK)
+        return JsonResponse({'message':message,'success':success, "response": data},status=status.HTTP_200_OK)
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
 
-def getOrderId(trend):
-    openorders = UpstoxOrder.objects.filter(is_open=True).values('instrument_token', 'qty', 'product')
+def getOrderId(trend, index=None):
+
+    openorders = UpstoxOrder.objects.filter(is_open=True).values('instrument_token', 'qty', 'product', 'symbol', 'order_id', 'index')
+    if index:
+        openorders = openorders.filter(index=index)
     if trend == 'all':
         orders = openorders
     else:
@@ -117,14 +154,17 @@ def exitOrderbyId(request):
     url = /trade/upstox/exitorderbyid/
     {
         "trend":"PE",
-        "mobile": "8977810371"
+        "mobile": "8977810371",
+        "symbol": "NIFTY/BANKNIFTY/SENSEX"
     }
     """
     jsonData = json.loads(request.body)
     mobile = jsonData.get('mobile', None)
     trend = jsonData.get('trend', None)
+    index = jsonData.get('symbol', None)
+
     try:
-        openOrders = getOrderId(trend)
+        openOrders = getOrderId(trend, index)
         trader = UpstoxUser.objects.get(mobile=mobile)
         TOKEN_HEADERS = {
                     'Accept': 'application/json',
@@ -141,14 +181,52 @@ def exitOrderbyId(request):
             "trigger_price": 0,
             "is_amo": False
         }
+        
         for order in openOrders:
+            if "SENSEX" in order['symbol'] or 'BANKEX' in  order['symbol']:
+                orderId = order['order_id']
+                url = ORDER_DETAILS
+                det_res = requests.get(url, headers=TOKEN_HEADERS, params=orderId)
+                cur_price = det_res.json()['response']['price']
+                data.update({"order_type": "LIMIT", "trigger_price": cur_price +.05, "price":cur_price })
+            
+            
             data.update({"instrument_token": order['instrument_token'],  "quantity": order['qty'], 
-                         'product': order['product']})
-            url = PLACE_ORDER
-            print(data)
-            response = requests.post(url, json=data, headers=TOKEN_HEADERS)
-            print(response.json())
-        openOrders.update(is_open=False, closed_at=datetime.datetime.now())
+                        'product': order['product']})
+            optchain_strk = None
+            if trader.is_active:
+                url = PLACE_ORDER
+                print(data)
+                response = requests.post(url, json=data, headers=TOKEN_HEADERS)
+                print(response.json())
+            else:
+                today = datetime.datetime.now().date()
+                week = today.weekday()
+                if index == 'NIFTY':
+                    instrument_key = "NSE_INDEX|Nifty 50"
+                    weekday = 3
+                else:
+                    instrument_key =  "NSE_INDEX|Nifty Bank"
+                    weekday = 2
+                days_ahead = weekday - week
+                if days_ahead < 0: 
+                    days_ahead += 7
+                resDt =  today + datetime.timedelta(days_ahead)
+                year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
+            
+                optionch = "https://api.upstox.com/v2/option/chain?instrument_key=" +instrument_key + "&expiry_date=" \
+                    +str(year)+'-'+str(month)+'-'+str(date)
+
+                _res = requests.get(optionch, headers=TOKEN_HEADERS)
+                _res = _res.json()
+                option_strike = order['symbol'][-7:][:5]
+                
+                if trend == 'CE':
+                    optchain_strk = [ele['call_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
+                else:
+                    optchain_strk = [ele['put_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
+        openOrders.update(is_open=False, closed_at=datetime.datetime.now(), close_price=optchain_strk)
+
 
         return JsonResponse({'message':'Order Exited','success':True},status=status.HTTP_200_OK)
     except Exception as e:
@@ -272,6 +350,7 @@ def exitallOrders(request):
     symbol = request.GET.get('symbol', None)
     trend = request.GET.get('trend', None)
     _type = request.GET.get('type', None)
+
     try:
         if not mobile:
             active_up_trader_objects = UpstoxUser.objects.filter(is_active=True)
@@ -311,6 +390,7 @@ def placeoptionOrder(request):
         "offlineOrder": "True/False",
         "mobile": "8977810371" #trader mobile
     }"""
+    trans_type = request.GET.get('transaction_type', None)
     jsonData = json.loads(request.body)
     index = jsonData.get('symbol')
     price = jsonData.get('price')
@@ -351,7 +431,7 @@ def placeoptionOrder(request):
             "tag": "string",
             "instrument_token": INSTUMENT_KEY ,
             "order_type": "MARKET" if not order_type else order_type,
-            "transaction_type": "BUY",
+            "transaction_type": "SELL" if trans_type and trans_type == "SELL" else "BUY",
             "disclosed_quantity": 0,
             "trigger_price": trigger_price+.05 if trigger_price else 0 ,
             "is_amo": True if offlineOrder and offlineOrder == "True"  else False
@@ -379,3 +459,4 @@ def placeoptionOrder(request):
     except Exception as e:
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
+    
