@@ -182,6 +182,7 @@ def exitOrderbyId(request):
             "is_amo": False
         }
         
+        optchain_strk = None
         for order in openOrders:
             if "SENSEX" in order['symbol'] or 'BANKEX' in  order['symbol']:
                 orderId = order['order_id']
@@ -193,7 +194,6 @@ def exitOrderbyId(request):
             
             data.update({"instrument_token": order['instrument_token'],  "quantity": order['qty'], 
                         'product': order['product']})
-            optchain_strk = None
             if trader.is_active:
                 url = PLACE_ORDER
                 print(data)
