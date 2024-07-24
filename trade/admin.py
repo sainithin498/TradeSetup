@@ -63,8 +63,8 @@ class UpstoxUserAdmin(admin.ModelAdmin):
 
 class UpstoxOrderAdmin(admin.ModelAdmin):
     model = UpstoxOrder
-    list_display = ['trader','order_id','symbol', 'index','instrument_token','product','trigger_price', 'qty','trend',
-                    'created_at','is_open', 'close_price', 'closed_at']
+    list_display = ['trader','order_id','symbol', 'index','instrument_token','product','trigger_price', 'close_price', 'qty','trend',
+                    'created_at','is_open', 'closed_at']
 
     def trader(self, obj):
         return obj.trader.trader_name
