@@ -10,6 +10,10 @@ from django.conf import settings
 from django.http import FileResponse, HttpResponse, JsonResponse
 from rest_framework import parsers, renderers, serializers, status, viewsets
 from rest_framework.decorators import api_view
+from django.shortcuts import render, redirect
+from django.db.models import F, FloatField,DecimalField
+import pandas as pd
+from django.db.models.functions import Cast
 
 def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product, index=None, expiry=None, triggerprice=None ):
     data = {
@@ -460,3 +464,24 @@ def placeoptionOrder(request):
         print("Some error occured in Eshwar account:", str(e))
         return JsonResponse({'message':str(e),'success':False},status=status.HTTP_200_OK)
     
+
+
+def pandlcalculation(request):
+
+    all_order_objects = UpstoxOrder.objects.filter(order_id='Testing', is_open=False).values("trader__trader_name", "order_id", "symbol",
+        "instrument_token", "product", "trigger_price", "close_price", "qty", "trend", "is_open", "created_at",
+         "closed_at" ).annotate(points=Cast(F("close_price")-F("trigger_price"), DecimalField(max_digits=20, decimal_places=2)), 
+        trade_total = (F("points")*F("qty"))).order_by('-id')
+    start = UpstoxOrder.objects.last().closed_at.date().strftime('%Y-%m-%d')
+    end = start
+    if request.method == 'POST':
+        start = request.POST.get('start_date')
+        end = request.POST.get('end_date')
+    filtered_orders =  all_order_objects.filter(closed_at__date__gte=start, closed_at__date__lte=end)
+    order_df = pd.DataFrame(filtered_orders)
+    PnL_Total = 0
+    if not  order_df.empty:
+
+        PnL_Total = order_df['trade_total'].sum()
+
+    return render(request,'trade/pandltrades.html',{'orders':filtered_orders, "start_date": start, "end_date":end, "PnL":PnL_Total})

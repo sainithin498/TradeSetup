@@ -1,0 +1,481 @@
+{% load tradevalues %}
+<!DOCTYPE html>
+
+<html lang="en-us" dir="ltr">
+<head>
+
+<title>Select upstox order to change | Django site admin</title>
+<link rel="stylesheet" href="/static/admin/css/base.css">
+
+  <link rel="stylesheet" href="/static/admin/css/dark_mode.css">
+  <script src="/static/admin/js/theme.js" defer></script>
+
+
+  <link rel="stylesheet" href="/static/admin/css/nav_sidebar.css">
+  <script src="/static/admin/js/nav_sidebar.js" defer></script>
+
+
+  
+  <link rel="stylesheet" href="/static/admin/css/changelists.css">
+  
+  
+    <script src="/admin/jsi18n/"></script>
+  
+  
+  
+
+
+
+
+<script src="/static/admin/js/vendor/jquery/jquery.js"></script>
+<script src="/static/admin/js/jquery.init.js"></script>
+<script src="/static/admin/js/core.js"></script>
+<script src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+<script src="/static/admin/js/actions.js"></script>
+<script src="/static/admin/js/urlify.js"></script>
+<script src="/static/admin/js/prepopulate.js"></script>
+<script src="/static/admin/js/vendor/xregexp/xregexp.js"></script>
+<script src="/static/admin/js/filters.js" defer></script>
+
+
+
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="/static/admin/css/responsive.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+<meta name="robots" content="NONE,NOARCHIVE">
+</head>
+
+<body class=" app-trade model-upstoxorder change-list"
+  data-admin-utc-offset="19800">
+<a href="#content-start" class="skip-to-content-link">Skip to main content</a>
+<!-- Container -->
+<div id="container">
+
+    
+    <!-- Header -->
+    
+    <div id="header">
+        <div id="branding">
+        
+<h1 id="site-name"><a href="/admin/">Django administration</a></h1>
+
+
+        </div>
+        
+        
+        <div id="user-tools">
+            
+                Welcome,
+                <strong>admin</strong>.
+            
+            
+                
+                    <a href="/">View site</a> /
+                
+                
+                    
+                    
+                
+                
+                <a href="/admin/password_change/">Change password</a> /
+                
+                <form id="logout-form" method="post" action="/admin/logout/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="ebQQv8PKDTRBavUaGKlfebfppJSyMRwqNQBvAKE4EnTRdyEjONgU5bEhQDPx6UTt">
+                    <button type="submit">Log out</button>
+                </form>
+                
+<button class="theme-toggle">
+  <div class="visually-hidden theme-label-when-auto">Toggle theme (current theme: auto)</div>
+  <div class="visually-hidden theme-label-when-light">Toggle theme (current theme: light)</div>
+  <div class="visually-hidden theme-label-when-dark">Toggle theme (current theme: dark)</div>
+  <svg aria-hidden="true" class="theme-icon-when-auto">
+    <use xlink:href="#icon-auto" />
+  </svg>
+  <svg aria-hidden="true" class="theme-icon-when-dark">
+    <use xlink:href="#icon-moon" />
+  </svg>
+  <svg aria-hidden="true" class="theme-icon-when-light">
+    <use xlink:href="#icon-sun" />
+  </svg>
+</button>
+
+            
+        </div>
+        
+        
+        
+    </div>
+    
+    <!-- END Header -->
+    
+      <nav aria-label="Breadcrumbs">
+        
+<div class="breadcrumbs">
+<a href="/admin/">Home</a>
+&rsaquo; <a href="/admin/trade/">Trade</a>
+&rsaquo; P and L Trades
+</div>
+
+      </nav>
+    
+    
+
+    <div class="main" id="main">
+      
+        
+          
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="Toggle navigation"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="Sidebar">
+  <input type="search" id="nav-filter"
+         placeholder="Start typing to filter…"
+         aria-label="Filter navigation items">
+  
+
+
+  
+    <div class="app-auth module">
+      <table>
+        <caption>
+          <a href="/admin/auth/" class="section" title="Models in the Authentication and Authorization application">Authentication and Authorization</a>
+        </caption>
+        
+          <tr class="model-group">
+            
+              <th scope="row"><a href="/admin/auth/group/">Groups</a></th>
+            
+
+            
+              <td><a href="/admin/auth/group/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-user">
+            
+              <th scope="row"><a href="/admin/auth/user/">Users</a></th>
+            
+
+            
+              <td><a href="/admin/auth/user/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+      </table>
+    </div>
+  
+    <div class="app-trade module current-app">
+      <table>
+        <caption>
+          <a href="/admin/trade/" class="section" title="Models in the Trade application">Trade</a>
+        </caption>
+        <tr class="model-pandlreport">
+            
+            <th scope="row"><a href="/admin/trade/pandlreport/">PandL Report</a></th>
+          
+
+          
+            <td><a href="/admin/trade/pandlreport/" class="addlink">Add</a></td>
+          
+
+          
+        
+            
+          
+        </tr>
+          <tr class="model-strikepointmaster">
+            
+              <th scope="row"><a href="/admin/trade/strikepointmaster/">Strikepoint masters</a></th>
+            
+
+            
+              <td><a href="/admin/trade/strikepointmaster/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-traderesponse">
+            
+              <th scope="row"><a href="/admin/trade/traderesponse/">Trade responses</a></th>
+            
+
+            
+              <td><a href="/admin/trade/traderesponse/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-tradeuser">
+            
+              <th scope="row"><a href="/admin/trade/tradeuser/">Trade users</a></th>
+            
+
+            
+              <td><a href="/admin/trade/tradeuser/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-transaction">
+            
+              <th scope="row"><a href="/admin/trade/transaction/">Transactions</a></th>
+            
+
+            
+              <td><a href="/admin/trade/transaction/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-upstoxorder current-model">
+            
+              <th scope="row"><a href="/admin/trade/upstoxorder/" aria-current="page">Upstox orders</a></th>
+            
+
+            
+              <td><a href="/admin/trade/upstoxorder/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+          <tr class="model-upstoxuser">
+            
+              <th scope="row"><a href="/admin/trade/upstoxuser/">Upstox users</a></th>
+            
+
+            
+              <td><a href="/admin/trade/upstoxuser/add/" class="addlink">Add</a></td>
+            
+
+            
+          </tr>
+        
+      </table>
+    </div>
+  
+
+
+</nav>
+
+        
+      
+      <div id="content-start" class="content" tabindex="-1">
+        
+          
+        
+        <!-- Content -->
+        <div id="content" class="">
+          
+       
+          
+          
+  <div id="content-main">
+    
+        <ul class="object-tools">
+          
+            
+
+  
+
+
+          
+        </ul>
+    
+    
+    <div class="module" id="changelist">
+      <div class="changelist-form-container">
+        
+
+
+        
+        <div class="container-fluid">
+        <form id="frm-example" method="post" name="assign" >
+          {% csrf_token %}
+          
+          <div class="row" >
+            <div class="col-sm-3">
+               <label for="id_taskstatus"><b>Select Start Date:</b></label>&nbsp;&nbsp;&nbsp;
+               <input type="date"  name="start_date" id="id_start_date" value='{{start_date}}' required>
+            </div>
+            <div class="col-sm-3">
+              <label for="id_taskstatus"><b>Select End Date:</b></label>&nbsp;&nbsp;&nbsp;
+              <input type="date"  name="end_date" id="id_end_date"  value={{end_date}} required>
+           </div>
+           <div class="col-sm-3">
+            
+            <input type="submit"  name="submit" id="submit" required>
+         </div>
+         <div class="col-sm-3">
+          <label for="id_taskstatus"><b>Total PnL: {{PnL}}</b></label>&nbsp;&nbsp;&nbsp;
+          
+       </div>
+         
+         </div>
+
+        </div>
+
+        </form>
+
+
+<div class="results">
+<table id="result_list" class="table table-striped table-bordered" style="width:100%">
+<thead>
+<tr>
+
+
+<th  class="column-trader">
+   
+   <div class="text"><a>Trader</a></div>
+   
+</th>
+<th  class="column-order_id">
+   
+   <div class="text"><a>Order id</a></div>
+   
+</th>
+<th  class="column-symbol">
+   
+   <div class="text"><a>Symbol</a></div>
+   
+</th>
+
+<th  class="column-instrument_token">
+   
+   <div class="text"><a>Instrument token</a></div>
+   
+</th>
+<th  class="column-product">
+   
+   <div class="text"><a>Product</a></div>
+   
+</th>
+<th  class="column-trigger_price">
+   
+   <div class="text"><a>Trigger price</a></div>
+   
+</th>
+<th  class="column-close_price">
+   
+   <div class="text"><a>Close price</a></div>
+   
+</th>
+<th  class="column-close_price">
+   
+  <div class="text"><a>POINTS</a></div>
+  
+</th>
+<th  class="column-qty">
+   
+   <div class="text"><a>Qty</a></div>
+   
+</th>
+<th  class="column-is_open">
+   
+  <div class="text"><a>Total</a></div>
+  
+</th>
+<th  class="column-trend">
+   
+   <div class="text"><a>Trend</a></div>
+   
+</th>
+<th  class="column-created_at">
+   
+   <div class="text"><a>Executed</a></div>
+   
+</th>
+
+<th  class="column-closed_at">
+   
+   <div class="text"><a>Closed</a></div>
+   
+</th>
+</tr>
+</thead>
+<tbody>
+  {% for trade in  orders %}
+  <tr>
+  
+    <td>{{trade.trader__trader_name}}</td>
+    <td>{{trade.order_id}}</td>
+    <td>{{trade.symbol}}</td>
+    <td>{{trade.instrument_token}}</td>
+    <td>{{trade.product}}</td>
+    <td>{{trade.trigger_price}}</td>
+    <td>{{trade.close_price}}</td>
+    <td>{{trade.points}}</td>
+    <td>{{trade.qty}}</td>
+    <td>{{trade.trade_total}}</td>
+    <td>{{trade.trend}}</td>
+    <td>{{ trade.created_at | timeformat   }}</td>
+    <td>{{trade.closed_at | timeformat }}</td>
+   
+
+  </tr>
+  {% endfor %}
+
+
+
+</tbody>
+</table>
+</div>
+
+
+          
+        
+        
+
+
+     
+      </div>
+      
+        
+      
+    </div>
+  </div>
+
+          
+          <br class="clear">
+        </div>
+        <!-- END Content -->
+        <div id="footer"></div>
+      </div>
+    </div>
+</div>
+<!-- END Container -->
+
+<!-- SVGs -->
+<svg xmlns="http://www.w3.org/2000/svg" class="base-svgs">
+  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-auto"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"/></symbol>
+  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-moon"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M10 7a7 7 0 0 0 12 4.9v.1c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2h.1A6.979 6.979 0 0 0 10 7zm-6 5a8 8 0 0 0 15.062 3.762A9 9 0 0 1 8.238 4.938 7.999 7.999 0 0 0 4 12z"/></symbol>
+  <symbol viewBox="0 0 24 24" width="1rem" height="1rem" id="icon-sun"><path d="M0 0h24v24H0z" fill="currentColor"/><path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/></symbol>
+</svg>
+<!-- END SVGs -->
+
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"> 
+
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.13.2/js/dataTables.bootstrap5.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('#result_list').DataTable();
+
+} );
+</script>
+</html>

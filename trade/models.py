@@ -1,6 +1,21 @@
 from django.db import models
 
 # Create your models here.
+class UpstoxTradeSymbol(models.Model):
+    instrument_key = models.CharField(max_length=50, blank=True, null=True)
+    tradingsymbol = models.CharField(max_length=50,blank=True, null=True)
+    expiry = models.CharField(max_length=50,blank=True, null=True)
+    lot_size = models.CharField(max_length=50,blank=True, null=True)
+    instrument_type	= models.CharField(max_length=50,blank=True, null=True)
+    option_type	= models.CharField(max_length=50,blank=True, null=True)
+    exchange = models.CharField(max_length=50,blank=True, null=True)
+
+class PandLReport(models.Model):
+    class Meta:
+        verbose_name = 'PandL Report'
+        verbose_name_plural  = 'PandL Report'
+
+
 class TradeUser(models.Model):
     trader_name = models.CharField(max_length=50)
     fyer_token = models.TextField()
@@ -63,8 +78,8 @@ class UpstoxUser(models.Model):
     upstox_secret_key = models.CharField(max_length=100, blank=True, null=True)
     symbol = models.CharField(max_length=50, blank=True, null=True)
 
-    def __str__(self):
-        return f'{self.trader_name}' 
+    # def __str__(self):
+    #     return f'{self.trader_name}' 
 
 class UpstoxOrder(models.Model):
     trader = models.ForeignKey('UpstoxUser', related_name='order_trader', on_delete=models.CASCADE)    

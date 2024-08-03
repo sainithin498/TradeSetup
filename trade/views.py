@@ -17,7 +17,7 @@ import requests
 from django.conf import settings
 import pandas as pd
 from trade.utils import execute, getStrikePrice, getToken, savingResponse
-
+import trade.MarketDataFeed_pb2 as pb
 
 # Create your views here.
 
