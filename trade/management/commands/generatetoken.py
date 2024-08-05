@@ -22,8 +22,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         mobile = options.get('mobile',None)
         broker = options.get('broker', None)
+        trader = TradeUser.objects.get(mobile=mobile)
         if broker == 'fyers':
-            trader = TradeUser.objects.get(mobile=mobile)
             mobile = trader.mobile
             client_id = trader.fyer_key
             redirect_uri = trader.redirect_uri
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             loginUrl = UPSTOX_AUTHORISE
             driver.get(loginUrl)
 
-            driver.find_element(By.ID, "mobileNum").send_keys('8977810371')
+            driver.find_element(By.ID, "mobileNum").send_keys(mobile)
             
             driver.find_element(By.ID, "getOtp").click()
             time.sleep(15)
@@ -82,10 +82,10 @@ class Command(BaseCommand):
             driver.find_element(By.ID, "continueBtn").click()
             time.sleep(2)
 
-            driver.find_element(By.ID, "pinCode").send_keys('170916')
+            driver.find_element(By.ID, "pinCode").send_keys("170916")
 
             driver.find_element(By.ID, "pinContinueBtn").click()
-            time.sleep(3)
+            time.sleep(5)
 
             get_url = driver.current_url
             time.sleep(1)
