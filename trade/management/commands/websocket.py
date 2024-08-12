@@ -140,8 +140,8 @@ class Command(BaseCommand):
                         runing = False
                     # Print the dictionary representationP
                     # print(json.dumps(data_dict), datetime.datetime.now())
-                    with open('somefile.txt', 'a') as the_file:
-                        the_file.write(json.dumps(data_dict) + "\n")
+                    # with open('somefile.txt', 'a') as the_file:
+                    #     the_file.write(json.dumps(data_dict) + "\n")
                     # currenttime = datetime.datetime.now().time()
                     # timestamp = data['feeds']['NSE_INDEX|Nifty Bank']['ff']['indexFF']['ltpc']['ltt']
                     # dt_object = datetime.datetime.fromtimestamp(int(timestamp)/1000, tz=timezone)
