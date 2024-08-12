@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import requests
 from trade.endpoints import BROKERAGE, EXITORDER, ORDER_DETAILS, PLACE_ORDER, POSITIONS
-from trade.models import UpstoxOrder, UpstoxUser
+from trade.models import LiveFeedData, UpstoxOrder, UpstoxUser
 from trade.utils import getStrikePrice, getexpiryValue
 from django.conf import settings
 from django.http import FileResponse, HttpResponse, JsonResponse
@@ -95,6 +95,7 @@ def placeOrder(request):
             url = ORDER_DETAILS
 
             det_res = requests.get(url, headers=TOKEN_HEADERS, params=orderId)
+            print(det_res.json()['data'])
             if det_res.json()['data']['status'] == 'complete':
                 message='Order placed'    
                 saveplaceOrders(trader.id, orderId['order_id'], option, trend, INSTUMENT_KEY, quantity, 
@@ -185,7 +186,6 @@ def exitOrderbyId(request):
             "trigger_price": 0,
             "is_amo": False
         }
-        
         optchain_strk = None
         for order in openOrders:
             if "SENSEX" in order['symbol'] or 'BANKEX' in  order['symbol']:
@@ -346,7 +346,7 @@ def multiUpstoxUserorderExit(user, data):
 @api_view(["GET", "POST"])
 def exitallOrders(request):
     """
-    url =/trade/upstox/exitall?mobile=8977810371&symbol=BANKNIFTY
+    url =/trade/upstox/exitall?mobile=8977810371&symbol=BANKNIFTY&trend=CE/PE&_type=BUY/SELL
    
     """
 
@@ -467,12 +467,12 @@ def placeoptionOrder(request):
 
 
 def pandlcalculation(request):
-
-    all_order_objects = UpstoxOrder.objects.filter(order_id='Testing', is_open=False).values("trader__trader_name", "order_id", "symbol",
+    all_orders = UpstoxOrder.objects.filter(order_id='Testing', is_open=False)
+    all_order_objects = all_orders.values("trader__trader_name", "order_id", "symbol",
         "instrument_token", "product", "trigger_price", "close_price", "qty", "trend", "is_open", "created_at",
          "closed_at" ).annotate(points=Cast(F("close_price")-F("trigger_price"), DecimalField(max_digits=20, decimal_places=2)), 
         trade_total = (F("points")*F("qty"))).order_by('-id')
-    start = UpstoxOrder.objects.last().closed_at.date().strftime('%Y-%m-%d')
+    start = all_orders.last().closed_at.date().strftime('%Y-%m-%d')
     end = start
     if request.method == 'POST':
         start = request.POST.get('start_date')
@@ -485,3 +485,52 @@ def pandlcalculation(request):
         PnL_Total = order_df['trade_total'].sum()
 
     return render(request,'trade/pandltrades.html',{'orders':filtered_orders, "start_date": start, "end_date":end, "PnL":PnL_Total})
+
+
+
+def readFeed():
+    path = "E:/Eswar/Trading/TradeSetup/somefile.txt"
+    feeFile = open(path, "r")
+    ltt = ""
+    ltd = ""
+    import pytz
+    import datetime
+    timezone = pytz.timezone('Asia/Kolkata')
+    starttime = datetime.datetime.strptime('00:00', '%H:%M').time()
+   
+
+    minuteData = {}
+    import ipdb ; ipdb.set_trace()
+    for line in feeFile:
+        data = json.loads(line)
+        from datetime import datetime
+        timestamp = data['feeds']['NSE_INDEX|Nifty Bank']['ff']['indexFF']['ltpc']['ltt']       
+        dt_object = datetime.fromtimestamp(int(timestamp)/1000, tz=timezone)
+        tradeDate = dt_object.date().strftime('%Y-%m-%d')
+        tradeTime = dt_object.time().strftime('%H:%M')
+        ohlc = data['feeds']['NSE_INDEX|Nifty Bank']['ff']['indexFF']['marketOHLC']['ohlc']
+       
+    
+        if starttime == tradeTime:            
+            minuteData['thigh']  = ohlc[2]['high'] if ohlc[2]['high'] > minuteData['thigh'] else minuteData['thigh']
+            minuteData['tlow']  = ohlc[2]['low']  if ohlc[2]['low'] < minuteData['tlow'] else minuteData['tlow']
+            
+        else:
+            starttime = tradeTime   
+            minuteData = {
+                              
+                "thigh": ohlc[2]['high'],
+                "tlow": ohlc[2]['low']                
+            }
+        minuteData["topen"]  = ohlc[2]['open'] 
+        minuteData["tclos"]  = ohlc[2]['close']    
+      
+        LiveFeedData.objects.update_or_create(symbol="BANKNIFTY",
+            tradedate=tradeDate, tradetime=tradeTime, instrumentKey='NSE_INDEX|Nifty Bank',
+            defaults={**minuteData}
+        )
+                  
+       
+
+    feeFile.close()
+

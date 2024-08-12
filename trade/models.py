@@ -97,4 +97,18 @@ class UpstoxOrder(models.Model):
     trigger_price = models.FloatField(blank=True, null=True)
     close_price = models.FloatField(blank=True, null=True)
     
+class LiveFeedData(models.Model):
+    symbol = models.CharField(max_length=30, blank=True, null=True)
+    instrumentKey = models.CharField(max_length=30, blank=True, null=True)
+    tradedate = models.DateField(max_length=15, blank=True, null=True)
+    tradetime = models.TimeField(max_length=10, blank=True, null=True)
+    endtime = models.TimeField(max_length=10, blank=True, null=True)
+    topen = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    thigh = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    tlow = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    tclos = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        unique_together = ('symbol', 'instrumentKey', 'tradedate', 'tradetime')
