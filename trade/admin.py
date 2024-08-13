@@ -89,6 +89,15 @@ class PandLReportAdmin(admin.ModelAdmin):
             path('', pandlcalculation, name=view_name),
         ]
 
+class LiveFeedDataAdmin(admin.ModelAdmin):
+    model = LiveFeedData
+    list_display = ['symbol', 'instrumentKey', 'tradedate', 'tradetime', 'endtime', 'topen', 'thigh', 'tlow', 'tclos']
+
+
+
+class LiveFeedDataAdmin(admin.ModelAdmin):
+    model = LiveFeedData
+    list_display = ['symbol', 'instrumentKey', 'tradedate', 'tradetime', 'topen', 'thigh', 'tlow', 'tclos']
 
 admin.site.register(TradeUser, tradeUserAdmin)
 admin.site.register(tradeResponse, tradeResponseAdmin)
@@ -98,8 +107,4 @@ admin.site.register(UpstoxUser, UpstoxUserAdmin)
 admin.site.register(UpstoxOrder, UpstoxOrderAdmin)
 admin.site.register(UpstoxTradeSymbol, UpstoxTradeSymbolAdmin)
 admin.site.register(PandLReport, PandLReportAdmin)
-
-
-
-
-
+admin.site.register(LiveFeedData, LiveFeedDataAdmin)
