@@ -58,10 +58,10 @@
     
     <!-- Header -->
     
-    <div id="header">
+    <div id="header" style="background: #417690;">
         <div id="branding">
         
-<h1 id="site-name"><a href="/admin/">Django administration</a></h1>
+<h1><a href="/admin/">Django administration</a></h1>
 
 
         </div>
@@ -112,9 +112,9 @@
     
     <!-- END Header -->
     
-      <nav aria-label="Breadcrumbs">
+      <nav aria-label="Breadcrumbs" >
         
-<div class="breadcrumbs">
+<div class="breadcrumbs" style="background: #79aec8;">
 <a href="/admin/">Home</a>
 &rsaquo; <a href="/admin/trade/">Trade</a>
 &rsaquo; P and L Trades
@@ -139,7 +139,7 @@
   
     <div class="app-auth module">
       <table>
-        <caption>
+        <caption style="background: #79aec8;">
           <a href="/admin/auth/" class="section" title="Models in the Authentication and Authorization application">Authentication and Authorization</a>
         </caption>
         
@@ -172,9 +172,14 @@
   
     <div class="app-trade module current-app">
       <table>
-        <caption>
+        <caption style="background: #79aec8;">
           <a href="/admin/trade/" class="section" title="Models in the Trade application">Trade</a>
         </caption>
+        <tr class="model-livefeeddata">
+            
+          <th scope="row"><a href="/admin/trade/livefeeddata/">Live feed datas</a></th>
+          <td><a href="/admin/trade/livefeeddata/add/" class="addlink">Add</a></td>
+      </tr>
         <tr class="model-pandlreport">
             
             <th scope="row"><a href="/admin/trade/pandlreport/">PandL Report</a></th>
