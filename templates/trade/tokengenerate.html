@@ -63,7 +63,8 @@
             <div class="breadcrumbs">
                <a href="/admin/">Home</a>
                &rsaquo; <a href="/admin/trade/">Trade</a>
-               &rsaquo; <a href="/admin/trade/tradeuser/">Trade users</a>
+               &rsaquo; <a {% if broker == 'upstox'%} href="/admin/trade/upstoxuser/" {%else %} href="/admin/trade/tradeuser/" {% endif %} > 
+                  Trade users</a>
                
             </div>
          </nav>

@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 import os
 from fyers_api import fyersModel
 from fyers_apiv3 import fyersModel
-from trade.models import TradeUser
+from trade.models import TradeUser, UpstoxUser
 from selenium.webdriver.chrome.options import Options
 from celery import shared_task
 
@@ -51,12 +51,15 @@ def fyersToken(auth_code, redirect_uri, client_id, secret_key):
 
 # @shared_task
 def scrappingToken(broker, otpNum, trader_id):
-    trader = TradeUser.objects.get(id=trader_id)
+    if broker == 'upstox':
+        trader = UpstoxUser.objects.get(id=trader_id)
+    else:
+        trader = TradeUser.objects.get(id=trader_id)
     mobile = trader.mobile
-    pinNumber = trader.pin
-    client_id = trader.fyer_key
-    redirect_uri = trader.redirect_uri
-    secret_key = trader.secret_key
+    # pinNumber = trader.pin
+    # client_id = trader.fyer_key
+    # redirect_uri = trader.redirect_uri
+    # secret_key = trader.secret_key
     print(trader)
     if os.name == 'nt':
         path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
@@ -73,24 +76,30 @@ def scrappingToken(broker, otpNum, trader_id):
 
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':
+
+        path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
+        ser = Service(path)
+        driver = webdriver.Chrome(service=ser)
+
         loginUrl = UPSTOX_AUTHORISE
         driver.get(loginUrl)
+
         driver.find_element(By.ID, "mobileNum").send_keys(mobile)
+        time.sleep(1)
         
         driver.find_element(By.ID, "getOtp").click()
-        time.sleep(2)
+        time.sleep(1)
 
         driver.find_element(By.ID, "otpNum").send_keys(otpNum) ## Enter
         time.sleep(1)
-
+        
         driver.find_element(By.ID, "continueBtn").click()
         time.sleep(2)
 
-        driver.find_element(By.ID, "pinCode").send_keys(pinNumber)
-        time.sleep(1)
+        driver.find_element(By.ID, "pinCode").send_keys("170916")
 
         driver.find_element(By.ID, "pinContinueBtn").click()
-        time.sleep(3)
+        time.sleep(5)
 
         get_url = driver.current_url
         time.sleep(1)
@@ -110,8 +119,14 @@ def scrappingToken(broker, otpNum, trader_id):
 
         response = requests.post(url, headers=HEADERS, data=data)
         res = response.json()
-        
-        token = res['access_token']
+        print(res['access_token'])
+        trader.upstox_token = res['access_token']
+        trader.token_date = datetime.datetime.now().date()
+        trader.save()
+        data = {
+            'succes': True
+        }
+
 
     
     else:
@@ -151,8 +166,8 @@ def scrappingToken(broker, otpNum, trader_id):
         auth_code = get_url.split('&')[2].split('=')[1]
         token = fyersToken(auth_code, redirect_uri, client_id, secret_key )
 
-    trader.fyer_token = token
-    trader.token_date = datetime.datetime.now().date()
-    trader.save()
+        trader.fyer_token = token
+        trader.token_date = datetime.datetime.now().date()
+        trader.save()
 
     # return token

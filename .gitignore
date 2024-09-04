@@ -2,3 +2,7 @@
 db.sqlite3
 migrations
 *.log
+*.ppk
+Nice*
+protoc*
+*.ipynb

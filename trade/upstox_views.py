@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import requests
 from trade.endpoints import BROKERAGE, EXITORDER, ORDER_DETAILS, PLACE_ORDER, POSITIONS
+from trade.gettoken import scrappingToken
 from trade.models import LiveFeedData, UpstoxOrder, UpstoxUser
 from trade.utils import getStrikePrice, getexpiryValue
 from django.conf import settings
@@ -14,6 +15,7 @@ from django.shortcuts import render, redirect
 from django.db.models import F, FloatField,DecimalField
 import pandas as pd
 from django.db.models.functions import Cast
+from django.contrib import messages
 
 def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product, index=None, expiry=None, triggerprice=None ):
     data = {
@@ -486,6 +488,24 @@ def pandlcalculation(request):
 
     return render(request,'trade/pandltrades.html',{'orders':filtered_orders, "start_date": start, "end_date":end, "PnL":PnL_Total})
 
+def getUpstoxToken(request, pk, broker):
+    trader = UpstoxUser.objects.get(id=pk)
+    print(trader)
+
+    if request.method == 'POST':
+        try:
+            otp = request.POST.get('otp_pin')
+            scrappingToken(broker, otp, pk)
+            
+            messages.success(request, 'Token Generate : {}'.format(trader.trader_name))
+        except Exception as e:
+            print(str(e))
+            messages.error(request, "Token not generated for User : {} , Duo to {}".format(trader.trader_name, str(e)))
+        
+        return redirect('/admin/trade/upstoxuser/')
+    return render(request,'trade/tokengenerate.html',{
+        'trader_name': trader.trader_name, 'broker': broker
+    })
 
 
 def readFeed():
@@ -504,13 +524,13 @@ def readFeed():
     for line in feeFile:
         data = json.loads(line)
         from datetime import datetime
-        timestamp = data['feeds']['NSE_INDEX|Nifty Bank']['ff']['indexFF']['ltpc']['ltt']       
+        timestamp = data['feeds']['NSE_EQ|INE296A01024']['ff']['indexFF']['ltpc']['ltt']       
         dt_object = datetime.fromtimestamp(int(timestamp)/1000, tz=timezone)
         tradeDate = dt_object.date().strftime('%Y-%m-%d')
         tradeTime = dt_object.time().strftime('%H:%M')
         ohlc = data['feeds']['NSE_INDEX|Nifty Bank']['ff']['indexFF']['marketOHLC']['ohlc']
-       
-    
+        
+
         if starttime == tradeTime:            
             minuteData['thigh']  = ohlc[2]['high'] if ohlc[2]['high'] > minuteData['thigh'] else minuteData['thigh']
             minuteData['tlow']  = ohlc[2]['low']  if ohlc[2]['low'] < minuteData['tlow'] else minuteData['tlow']
@@ -518,17 +538,14 @@ def readFeed():
         else:
             starttime = tradeTime   
             minuteData = {
-                              
+                                
                 "thigh": ohlc[2]['high'],
                 "tlow": ohlc[2]['low']                
             }
         minuteData["topen"]  = ohlc[2]['open'] 
         minuteData["tclos"]  = ohlc[2]['close']    
-      
-        LiveFeedData.objects.update_or_create(symbol="BANKNIFTY",
-            tradedate=tradeDate, tradetime=tradeTime, instrumentKey='NSE_INDEX|Nifty Bank',
-            defaults={**minuteData}
-        )
+        
+        
                   
        
 

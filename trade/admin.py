@@ -50,7 +50,7 @@ class TransactionAdmin(admin.ModelAdmin):
     
 class UpstoxUserAdmin(admin.ModelAdmin):
     model = UpstoxUser
-    list_display = ['trader_name', 'mobile', 'is_active', 'balance', 'fetchBalance', 'stock_quantity', 'bn_option_quantity','nf_option_quantity', 'token_date' ]
+    list_display = ['trader_name', 'mobile', 'is_active', 'balance', 'fetchBalance', 'stock_quantity', 'bn_option_quantity','nf_option_quantity', 'token_date', 'tokengen' ]
     export_fields = ['trader_name', 'fyer_token','fyer_key','mobile','pin','is_active','balance','stock_quantity','bn_option_quantity',
             'nf_option_quantity','token_date','redirect_uri','secret_key']
     
@@ -58,6 +58,10 @@ class UpstoxUserAdmin(admin.ModelAdmin):
     def fetchBalance(self, obj):
         url = '/admin/trade/'+ str(obj.id) +'/upstox/balance/'
         return format_html("<a href={}>Fetch Balance</a>", url)
+    
+    def tokengen(self, obj):
+        url = '/admin/trade/'+ str(obj.id) +'/upstox/gentoken/'
+        return format_html("<a href={}>Gen Token</a>", url)
     
     def has_delete_permission(self, request, obj=None):
         return False
