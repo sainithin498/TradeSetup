@@ -77,9 +77,9 @@ def scrappingToken(broker, otpNum, trader_id):
         driver = webdriver.Chrome(service=ser, options=chrome_options)
     if broker == 'upstox':
 
-        path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
-        ser = Service(path)
-        driver = webdriver.Chrome(service=ser)
+        # path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
+        # ser = Service(path)
+        # driver = webdriver.Chrome(service=ser)
 
         loginUrl = UPSTOX_AUTHORISE
         driver.get(loginUrl)
