@@ -2,7 +2,7 @@ import datetime
 from trade.gettoken import fyersToken
 from trade.models import TradeUser, strikepointMaster, tradeResponse
 from fyers_apiv3 import fyersModel
-
+import calendar
 
 def savingResponse(tradeUser, response, requestpath, symbol=None):
     data = {
@@ -30,11 +30,11 @@ def dategeneration(weekday):
     if days_ahead < 0: 
         days_ahead += 7
     resDt =  today + datetime.timedelta(days_ahead)
-    nxtDt = resDt + datetime.timedelta(7)
-    if  resDt.month == nxtDt.month:
-        year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
-    else:
-        year, month, date = resDt.year, resDt.strftime("%b").upper(), None
+    # nxtDt = resDt + datetime.timedelta(7)
+    # if  resDt.month == nxtDt.month:
+    year, month, date = resDt.year, resDt.month, str(resDt.day).rjust(2, '0')
+    # else:
+    #     year, month, date = resDt.year, resDt.strftime("%b").upper(), None
     return year, month, date, week
 
 def getexpiryValue(index, weekday=None ):
@@ -60,9 +60,12 @@ def getexpiryValue(index, weekday=None ):
     return year, month, date, week 
     
 
-def getStrikePrice(spot, index, _type, weekday=None):
+def getStrikePrice(spot, index, _type, weekday=None, broker='upstox'):
     """Using for index alerts, not for option alerts"""
-    """NSE:NIFTY2292217000CE"""
+    """NSE:NIFTY2292217000CE
+        BANKNIFTY 51000 CE 11 SEP 24
+        index     value code date month year
+    """
  
     year, month, date, week = getexpiryValue(index, weekday)
     value, code = roundnearest(int(spot), _type)
@@ -87,8 +90,13 @@ def getStrikePrice(spot, index, _type, weekday=None):
     
     elif index == 'BANKNIFTY':
         value = round(value / 500) * 500
-    if date:    
-        strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date) + str(value) + code
+    if date:
+        if broker == 'upstox':
+            strike = "NSE:" + index.upper() + " " + str(value) + " " + code + " " + str(date)+ " "\
+            + calendar.month_abbr[month].upper() + " " + str(year)[2:]
+        else:
+           
+            strike = "NSE:" + index.upper() + str(year)[2:] + str(month) + str(date) + str(value) + code
     else:
         strike = "NSE:" + index.upper() + str(year)[2:] + month + str(value) + code
     return strike#, qty

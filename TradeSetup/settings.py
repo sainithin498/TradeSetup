@@ -139,8 +139,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 import os
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-NSE_PATH = os.path.join(BASE_DIR, 'NSETrades.csv')
-BSE_PATH = os.path.join(BASE_DIR, 'BSETrades.csv')
+NSE_PATH = os.path.join(BASE_DIR, 'NSETrades.json')
+BSE_PATH = os.path.join(BASE_DIR, 'BSETrades.json')
 print(NSE_PATH)
 
 NSE_INDEX = ['NIFTY', 'BANKNIFTY', 'FINNIFTY', 'MIDCPNIFTY']

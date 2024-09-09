@@ -65,11 +65,11 @@ def placeOrder(request):
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }  
         data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
-     
+
         option = strike[4:]
-        df = pd.read_csv(data_path)
+        df = pd.read_json(data_path)
         
-        df = df.loc[df['tradingsymbol'] == option]
+        df = df.loc[df['trading_symbol'] == option]
         INSTUMENT_KEY = df.iloc[0]['instrument_key']
         print(INSTUMENT_KEY , ':::::', option)       
         data = {
@@ -128,7 +128,9 @@ def placeOrder(request):
 
             _res = requests.get(optionch, headers=TOKEN_HEADERS)
             _res = _res.json()
-            option_strike = option[-7:][:5]
+            # option_strike = option[-7:][:5]
+            option_strike = option.split(" ")[1]
+
             if trend == 'CE':
                 optchain_strk = [ele['call_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
             else:
@@ -169,7 +171,6 @@ def exitOrderbyId(request):
     mobile = jsonData.get('mobile', None)
     trend = jsonData.get('trend', None)
     index = jsonData.get('symbol', None)
-
     try:
         openOrders = getOrderId(trend, index)
         trader = UpstoxUser.objects.get(mobile=mobile)
@@ -225,7 +226,7 @@ def exitOrderbyId(request):
 
                 _res = requests.get(optionch, headers=TOKEN_HEADERS)
                 _res = _res.json()
-                option_strike = order['symbol'][-7:][:5]
+                option_strike = order['symbol'].split(" ")[1]
                 
                 if trend == 'CE':
                     optchain_strk = [ele['call_options']['market_data']['ltp'] for ele in _res['data'] if int(ele['strike_price']) ==  int(option_strike)][0]
@@ -267,8 +268,8 @@ def upstoxStocks(request):
                 'Authorization': 'Bearer {}'.format(trader.upstox_token)
         }
         data_path = settings.NSE_PATH            
-        df = pd.read_csv(data_path)            
-        df = df.loc[df['tradingsymbol'] == stock]
+        df = pd.read_json(data_path)            
+        df = df.loc[df['trading_symbol'] == stock]
         INSTUMENT_KEY = df.iloc[0]['instrument_key']
         
         data = {
@@ -423,9 +424,9 @@ def placeoptionOrder(request):
                 }  
         data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
       
-        df = pd.read_csv(data_path)
+        df = pd.read_json(data_path)
         
-        df = df.loc[df['tradingsymbol'] == option]
+        df = df.loc[df['trading_symbol'] == option]
         INSTUMENT_KEY = df.iloc[0]['instrument_key']
         print(INSTUMENT_KEY , ':::::', option)
    
@@ -520,7 +521,6 @@ def readFeed():
    
 
     minuteData = {}
-    import ipdb ; ipdb.set_trace()
     for line in feeFile:
         data = json.loads(line)
         from datetime import datetime
