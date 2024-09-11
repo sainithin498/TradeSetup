@@ -12,6 +12,7 @@ import gzip, shutil, tarfile
 from selenium.webdriver.chrome.options import Options
 import pytz
 from datetime import datetime
+from django.db import connection
 timezone = pytz.timezone('Asia/Kolkata')
 
 
@@ -98,12 +99,22 @@ class Command(BaseCommand):
         datadf = datadf.loc[datadf['segment'].isin(['NSE_FO', 'NSE_EQ', 'BSE_FO'])]
         
         datadf = datadf.where(pd.notnull(datadf), None)
-        datadf['expiry'] = df['expiry'].apply(lambda x: getDate(x) if x else None)
+        datadf['expiry'] = datadf['expiry'].apply(lambda x: getDate(x) if x else None)
         datadf['strike_price'] = datadf['strike_price'].fillna(0)
-        UpstoxTradeSymbol.objects.bulk_create(
-            UpstoxTradeSymbol(**vals) for vals in datadf.to_dict('records')
-        )
-        # time.sleep(15)
+        chunk_size = 2000
+        num_chunks = len(datadf) // chunk_size + (1 if len(datadf) % chunk_size != 0 else 0)
+        smaller_dataframes = [datadf.iloc[i * chunk_size:(i + 1) * chunk_size] for i in range(num_chunks)]
+        print('truncating')
+        cursor = connection.cursor()
+        cursor.execute("""TRUNCATE TABLE trade_upstoxtradesymbol RESTART IDENTITY;""")
+        cursor.close()
+        connection.close()
+
+        for i, small_df in enumerate(smaller_dataframes):         
+            
+            UpstoxTradeSymbol.objects.bulk_create(
+                UpstoxTradeSymbol(**vals) for vals in small_df.to_dict('records')
+            )
         os.remove(json_file)
         for zf in zip_files:
             os.remove(zf)
