@@ -1,14 +1,24 @@
 from django.db import models
-
+"""['segment', 'name', 'instrument_type',
+       'instrument_key', 'lot_size',
+       'asset_type', 'asset_symbol
+       'trading_symbol', 'strike_price'
+       ]"""
 # Create your models here.
 class UpstoxTradeSymbol(models.Model):
     instrument_key = models.CharField(max_length=50, blank=True, null=True)
-    tradingsymbol = models.CharField(max_length=50,blank=True, null=True)
-    expiry = models.CharField(max_length=50,blank=True, null=True)
-    lot_size = models.CharField(max_length=50,blank=True, null=True)
+    segment = models.CharField(max_length=50, blank=True, null=True)
+    trading_symbol = models.CharField(max_length=50,blank=True, null=True)
+    name = models.CharField(max_length=50,blank=True, null=True)
+    lot_size = models.IntegerField(blank=True, null=True)
+    asset_type = models.CharField(max_length=50, blank=True, null=True)
+    asset_symbol = models.CharField(max_length=50, blank=True, null=True)
     instrument_type	= models.CharField(max_length=50,blank=True, null=True)
-    option_type	= models.CharField(max_length=50,blank=True, null=True)
-    exchange = models.CharField(max_length=50,blank=True, null=True)
+    strike_price = models.IntegerField(blank=True, null=True)
+    expiry = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 
 class PandLReport(models.Model):
     class Meta:
@@ -107,6 +117,9 @@ class LiveFeedData(models.Model):
     thigh = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
     tlow = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
     tclos = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    e20 = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    e50 = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
+    rsi = models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

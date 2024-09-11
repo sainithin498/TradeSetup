@@ -68,7 +68,7 @@ class UpstoxUserAdmin(admin.ModelAdmin):
 
 class UpstoxOrderAdmin(admin.ModelAdmin):
     model = UpstoxOrder
-    list_display = ['traderName','order_id','symbol', 'index','instrument_token','product','trigger_price', 'close_price', 'qty','trend',
+    list_display = ['traderName','order_id','symbol', 'instrument_token','product','trigger_price', 'close_price', 'qty','trend',
                     'created_at','is_open', 'closed_at']
 
     def traderName(self, obj):
@@ -76,7 +76,9 @@ class UpstoxOrderAdmin(admin.ModelAdmin):
   
 class UpstoxTradeSymbolAdmin(admin.ModelAdmin):
     model = UpstoxTradeSymbol
-    list_display = ['instrument_key', 'tradingsymbol', 'expiry', 'lot_size', 'instrument_type', 'option_type', 'exchange']
+    
+    list_display = ['name', 'instrument_key', 'segment', 'trading_symbol', 'expiry', 'lot_size','asset_type',
+         'instrument_type', 'asset_symbol', 'strike_price']
 
     
     

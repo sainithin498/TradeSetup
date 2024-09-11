@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import requests
 from trade.endpoints import CREDS, HEADERS, TOKEN, UPSTOX_AUTHORISE
-from trade.models import TradeUser, UpstoxUser
+from trade.models import TradeUser, UpstoxUser, UpstoxTradeSymbol
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -9,6 +9,11 @@ import os, zipfile, glob
 import time
 from django.conf import settings
 import gzip, shutil, tarfile
+from selenium.webdriver.chrome.options import Options
+import pytz
+from datetime import datetime
+timezone = pytz.timezone('Asia/Kolkata')
+
 
 def unzip_file(zip_file_path, extract_to_path):
     if not os.path.exists(extract_to_path):
@@ -25,6 +30,17 @@ def unzip_file(zip_file_path, extract_to_path):
         for f in files:
             os.chmod(os.path.join(root, f), 0o777)
 
+def getDate(timestamp):
+    tradeDate = None
+    try:
+        if timestamp:
+            dt_object = datetime.fromtimestamp(int(timestamp)/1000, tz=timezone)
+            tradeDate = dt_object.date().strftime('%Y-%m-%d')
+    except: pass
+    return tradeDate
+
+
+
 class Command(BaseCommand):
     help = "Get the instruments"
 
@@ -33,35 +49,64 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         download_dir = settings.BASE_DIR
         instrument = os.path.join(download_dir, 'instrument/')
-        # path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
-        # ser = Service(path)
-        # # driver = webdriver.Chrome(service=ser)
+        preferences = {
+                    "download.default_directory": instrument ,
+                    "directory_upgrade": False,
+                    "safebrowsing.enabled": False }
+        chrome_options = Options()
 
-        # upstoxurl = "https://assets.upstox.com/market-quote/instruments/exchange/complete.json.gz"
-        # # driver.get(upstoxurl)
-        # chrome_options = webdriver.ChromeOptions()
-        # chrome_options.add_argument("--headless")
-        # chrome_options.add_argument('--no-sandbox')
-        # preferences = {
-        #             "download.default_directory": instrument ,
-        #             "directory_upgrade": False,
-        #             "safebrowsing.enabled": False }
-        # chrome_options.add_experimental_option("prefs", preferences)
-        # driver = webdriver.Chrome(service=ser, options=chrome_options)
-        # driver.get(upstoxurl)
-        # time.sleep(5)
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--no-sandbox')        
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_experimental_option("prefs", preferences)
+
+        if os.name == 'nt':
+            path = 'E:/Eswar/Trading/chromedriver-win64/chromedriver.exe'
+            ser = Service(path)
+        else:
+            
+            CHROMEDRIVER_PATH = '/usr/local/bin/chromedriver'
+            WINDOW_SIZE = "1920,1080"
+            ser = Service(CHROMEDRIVER_PATH)
+
+
+        driver = webdriver.Chrome(service=ser, options=chrome_options)
+       
+        upstoxurl = "https://assets.upstox.com/market-quote/instruments/exchange/complete.json.gz"
+        driver.get(upstoxurl)
+        time.sleep(5)
+        driver.quit()
         zip_files = glob.glob(os.path.join(instrument, '*.gz'))        
         zip_files.sort(key=os.path.getmtime, reverse=True)
-        import ipdb ; ipdb.set_trace()
-
+       
         for name in zip_files:
-            print(name)
-            tf = tarfile.open(name)
-            tf.extractall(instrument)
-            print('-- Done') 
-        # file =  zip_files[0]
-        # unzip_file(file, instrument)
-
-
-  
+            chunk_size = 4096
+            with gzip.open(name, 'rb') as f_in:
+                with open(os.path.join(instrument, 'tradeData.json'), 'wb') as f_out:
+                    chunk = f_in.read(chunk_size)
+                    while chunk:
+                        f_out.write(chunk)
+                        chunk = f_in.read(chunk_size)
         
+        import pandas as pd
+        json_file = os.path.join(instrument, 'tradeData.json')
+        df = pd.read_json(json_file)
+       
+        columns = ['name', 'instrument_key', 'segment', 'trading_symbol', 'expiry', 'lot_size','asset_type',
+         'instrument_type', 'asset_symbol', 'strike_price']
+        datadf = df[columns]
+        datadf = datadf.loc[datadf['segment'].isin(['NSE_FO', 'NSE_EQ', 'BSE_FO'])]
+        
+        datadf = datadf.where(pd.notnull(datadf), None)
+        datadf['expiry'] = df['expiry'].apply(lambda x: getDate(x) if x else None)
+        datadf['strike_price'] = datadf['strike_price'].fillna(0)
+        UpstoxTradeSymbol.objects.bulk_create(
+            UpstoxTradeSymbol(**vals) for vals in datadf.iloc[0:10].to_dict('records')
+        )
+        # time.sleep(15)
+        os.remove(json_file)
+        for zf in zip_files:
+            os.remove(zf)
+        
+
+
