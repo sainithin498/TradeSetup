@@ -101,7 +101,7 @@ class Command(BaseCommand):
         datadf['expiry'] = df['expiry'].apply(lambda x: getDate(x) if x else None)
         datadf['strike_price'] = datadf['strike_price'].fillna(0)
         UpstoxTradeSymbol.objects.bulk_create(
-            UpstoxTradeSymbol(**vals) for vals in datadf.iloc[0:10].to_dict('records')
+            UpstoxTradeSymbol(**vals) for vals in datadf.to_dict('records')
         )
         # time.sleep(15)
         os.remove(json_file)
