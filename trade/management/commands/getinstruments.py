@@ -43,7 +43,9 @@ def getDate(timestamp):
 
 
 class Command(BaseCommand):
-    help = "Get the instruments"
+    help = """Get the getinstruments
+    /home/ubuntu/workspace/tenv/bin/python /home/ubuntu/workspace/TradeSetup/manage.py getinstruments >> /home/ubuntu/workspace/cron_logs/instruments.log 2>&1
+    """
 
    
 

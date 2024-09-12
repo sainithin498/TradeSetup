@@ -5,7 +5,7 @@ import pandas as pd
 import requests
 from trade.endpoints import BROKERAGE, EXITORDER, ORDER_DETAILS, PLACE_ORDER, POSITIONS
 from trade.gettoken import scrappingToken
-from trade.models import LiveFeedData, UpstoxOrder, UpstoxUser
+from trade.models import LiveFeedData, UpstoxOrder, UpstoxUser, UpstoxTradeSymbol
 from trade.utils import getStrikePrice, getexpiryValue
 from django.conf import settings
 from django.http import FileResponse, HttpResponse, JsonResponse
@@ -16,7 +16,7 @@ from django.db.models import F, FloatField,DecimalField
 import pandas as pd
 from django.db.models.functions import Cast
 from django.contrib import messages
-
+import calendar
 def saveplaceOrders(trader, id, symbol, trend, instrument,qty, product, index=None, expiry=None, triggerprice=None ):
     data = {
         'order_id': id,
@@ -64,13 +64,14 @@ def placeOrder(request):
                     'Accept': 'application/json',
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }  
-        data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
+        
+        allindex_objects = UpstoxTradeSymbol.objects.filter(asset_type = 'INDEX', asset_symbol = index)
 
         option = strike[4:]
-        df = pd.read_json(data_path)
-        
-        df = df.loc[df['trading_symbol'] == option]
-        INSTUMENT_KEY = df.iloc[0]['instrument_key']
+        trade_sybmol_obj = allindex_objects.filter(trading_symbol=option)
+        INSTUMENT_KEY = trade_sybmol_obj[0].instrument_key
+
+      
         print(INSTUMENT_KEY , ':::::', option)       
         data = {
             "quantity": quantity,
@@ -411,23 +412,21 @@ def placeoptionOrder(request):
     trigger_price = jsonData.get('trigger_price', None)
     try:
         success = True
-       
         year, month, date, week  = getexpiryValue(index, weekday)
-        if date :
-            option = index.upper() + str(year)[2:] + str(month) + str(date)+ str(price) + trend
-        else:
-            option = index.upper() + str(year)[2:] + str(month) + str(price) + trend
+        option = index.upper() + " " + str(price) + " " + trend + " " + str(date)+ " "\
+            + calendar.month_abbr[month].upper() + " " + str(year)[2:]
+
         trader = UpstoxUser.objects.get(mobile= mobile)
         TOKEN_HEADERS = {
                     'Accept': 'application/json',
                     'Authorization': 'Bearer {}'.format(trader.upstox_token)
                 }  
-        data_path = settings.NSE_PATH if index in settings.NSE_INDEX else settings.BSE_PATH
-      
-        df = pd.read_json(data_path)
-        
-        df = df.loc[df['trading_symbol'] == option]
-        INSTUMENT_KEY = df.iloc[0]['instrument_key']
+
+        allindex_objects = UpstoxTradeSymbol.objects.filter(asset_type = 'INDEX', asset_symbol = index)
+
+        trade_sybmol_obj = allindex_objects.filter(trading_symbol=option)
+        INSTUMENT_KEY = trade_sybmol_obj[0].instrument_key
+       
         print(INSTUMENT_KEY , ':::::', option)
    
         data = {
